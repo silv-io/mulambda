@@ -1,6 +1,6 @@
 # MuLambda - A platform for automated machine learning
 
-![MuLambda Logo generated with OpenAI DALL-E](img/logo.png)
+![MuLambda Logo](img/logo.svg)
 
 This project provides an open platform for deploying your machine learning models and enables a serverless inference of them. 
 
