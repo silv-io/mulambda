@@ -1,7 +1,7 @@
 from typing import Dict
 
-from model_inferencer import ModelInferencer
-from model_matching import ModelCharacteristics, SoftCriteriaWeights, HardCriteria
+from mulambda.models.inference import ModelInferencer
+from mulambda.models.matching import ModelCharacteristics, SoftCriteriaWeights, HardCriteria
 
 dummy_model_characteristics = ModelCharacteristics(
     hard_criteria={'model_type': 'dummy', 'input_type': 'text', 'output_format': 'text'},

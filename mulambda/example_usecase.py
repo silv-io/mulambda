@@ -1,4 +1,4 @@
-from model_registry import IdentityInferencer, MODELS, Model
+from mulambda.models.registry import MODELS, Model
 
 
 def model_injected(hard_criteria=None, weights=None):

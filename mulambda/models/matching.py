@@ -1,6 +1,6 @@
 from typing import TypedDict, Literal, Callable
 
-from util import short_uid
+from mulambda.util import short_uid
 
 
 class HardCriteria(TypedDict):
