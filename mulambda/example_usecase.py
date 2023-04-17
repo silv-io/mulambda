@@ -1,3 +1,5 @@
+from typing import Callable
+
 from mulambda.models.registry import MODELS, Model
 
 
@@ -14,8 +16,8 @@ def model_injected(hard_criteria=None, weights=None):
 
 
 @model_injected()
-def serverless_ml_function(model):
-    print(model.infer("Silvio"))
+def serverless_ml_function(model: Callable):
+    print(model("Silvio"))
 
 
 if __name__ == '__main__':

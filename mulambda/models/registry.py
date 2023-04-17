@@ -15,7 +15,7 @@ class IdentityInferencer(ModelInferencer):
         self.identity = identity
         super().__init__()
 
-    def infer(self, input_data):
+    def _infer(self, input_data):
         return f"[{self.identity}] received: {input_data}"
 
 
