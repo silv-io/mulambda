@@ -1,6 +1,6 @@
 from typing import Dict
 
-from mulambda.models.inference import ModelInferencer
+from mulambda.models.executor import ModelExecutor, IdentityExecutor
 from mulambda.models.matching import ModelCharacteristics, SoftCriteriaWeights, HardCriteria
 
 dummy_model_characteristics = ModelCharacteristics(
@@ -10,22 +10,14 @@ dummy_model_characteristics = ModelCharacteristics(
 )
 
 
-class IdentityInferencer(ModelInferencer):
-    def __init__(self, identity: str):
-        self.identity = identity
-        super().__init__()
-
-    def _infer(self, input_data):
-        return f"[{self.identity}] received: {input_data}"
-
 
 class Model:
     characteristics: ModelCharacteristics
-    inferencer: ModelInferencer
+    executor: ModelExecutor
 
-    def __init__(self, characteristics: ModelCharacteristics = None, inferencer: ModelInferencer = None):
+    def __init__(self, characteristics: ModelCharacteristics = None, executor: ModelExecutor = None):
         self.characteristics = characteristics or dummy_model_characteristics
-        self.inferencer = inferencer or IdentityInferencer(self.characteristics.identity)
+        self.executor = executor or IdentityExecutor()
 
 
 class ModelRegistry:
@@ -43,4 +35,3 @@ class ModelRegistry:
                        model.characteristics))
 
 
-MODELS = ModelRegistry()

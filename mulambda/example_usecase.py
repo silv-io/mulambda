@@ -1,18 +1,7 @@
 from typing import Callable
 
-from mulambda.models.registry import MODELS, Model
-
-
-def model_injected(hard_criteria=None, weights=None):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            # TODO here we should select the model to inject
-            model = MODELS.receive_model(hard_criteria, weights)
-            return func(model.inferencer, *args, **kwargs)
-
-        return wrapper
-
-    return decorator
+from mulambda.context import model_injected, global_context
+from mulambda.models.registry import Model
 
 
 @model_injected()
@@ -21,5 +10,5 @@ def serverless_ml_function(model: Callable):
 
 
 if __name__ == '__main__':
-    MODELS.register_model(Model())
+    global_context.model_registry.register_model(Model())
     serverless_ml_function()
