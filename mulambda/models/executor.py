@@ -1,5 +1,8 @@
 import abc
 import logging
+import time
+
+import numpy as np
 
 from mulambda.util import short_uid
 
@@ -40,14 +43,27 @@ class IdentityExecutor(ModelExecutor):
 
 # TODO add sleep timers and debug input and output handling
 class DebugExecutor(ModelExecutor):
-    def _pre_infer(self):
+    # mean and standard deviation of latency
+    mu_latency: int
+    sigma_latency: int
+
+    def __init__(self, mu_latency: int = 100, sigma_latency: int = 20):
+        super().__init__()
+
+    def _calculate_random_latency(self):
+        return np.random.normal(self.mu_latency, self.sigma_latency)
+
+    def _pre_infer(self, input_data):
         LOG.debug("handling pre_infer...")
-        return
+        return input_data
 
     def _infer(self, input_data):
         LOG.debug("handling infer...")
+        wait_time = self._calculate_random_latency()
+        LOG.debug(f"waiting for {wait_time} ms")
+        time.sleep(wait_time / 1000)
         return input_data
 
-    def _post_infer(self):
+    def _post_infer(self, output_data):
         LOG.debug("handling post_infer...")
-        return
+        return output_data
