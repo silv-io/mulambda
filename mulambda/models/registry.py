@@ -1,14 +1,13 @@
 from typing import Dict
 
-from mulambda.models.executor import ModelExecutor, IdentityExecutor
-from mulambda.models.matching import ModelCharacteristics, SoftCriteriaWeights, HardCriteria
+from mulambda.models.executor import IdentityExecutor, ModelExecutor
+from mulambda.models.matching import HardCriteria, ModelCharacteristics, SoftCriteriaWeights
 
 dummy_model_characteristics = ModelCharacteristics(
-    hard_criteria={'model_type': 'dummy', 'input_type': 'text', 'output_format': 'text'},
-    soft_criteria={'energy_efficiency': 1.0, 'accuracy': 1.0, 'latency': 10, 'cached': False},
-    version=1
+    hard_criteria={"model_type": "dummy", "input_type": "text", "output_format": "text"},
+    soft_criteria={"energy_efficiency": 1.0, "accuracy": 1.0, "latency": 10, "cached": False},
+    version=1,
 )
-
 
 
 class Model:
@@ -30,8 +29,7 @@ class ModelRegistry:
         self.models[model.characteristics.identity] = model
 
     def receive_model(self, hard_criteria: HardCriteria, weights: SoftCriteriaWeights):
-        return min(self.models.values(),
-                   key=lambda model: ModelCharacteristics.generate_key_function(hard_criteria, weights)(
-                       model.characteristics))
-
-
+        return min(
+            self.models.values(),
+            key=lambda model: ModelCharacteristics.generate_key_function(hard_criteria, weights)(model.characteristics),
+        )
