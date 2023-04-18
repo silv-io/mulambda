@@ -36,7 +36,11 @@ class ModelCharacteristics:
     version: int
 
     def __init__(
-        self, hard_criteria: HardCriteria, soft_criteria: SoftCriteria, version: int = 0, identity: str = None
+        self,
+        hard_criteria: HardCriteria,
+        soft_criteria: SoftCriteria,
+        version: int = 0,
+        identity: str = None,
     ):
         self.hard_criteria = hard_criteria
         self.soft_criteria = soft_criteria
@@ -45,7 +49,9 @@ class ModelCharacteristics:
 
     @classmethod
     def _normalize_latency(cls, latency: int, latency_range: LatencyRange) -> float:
-        return (latency - latency_range["min"]) / (latency_range["max"] - latency_range["min"])
+        return (latency - latency_range["min"]) / (
+            latency_range["max"] - latency_range["min"]
+        )
 
     @classmethod
     def _get_weighted_score(cls, model, hard_criteria, weights):
@@ -54,13 +60,18 @@ class ModelCharacteristics:
         return (
             1
             - model.soft_criteria["accuracy"] * weights["accuracy"]
-            + cls._normalize_latency(model.soft_criteria["latency"], weights["latency_range"]) * weights["latency"]
+            + cls._normalize_latency(
+                model.soft_criteria["latency"], weights["latency_range"]
+            )
+            * weights["latency"]
             + model.soft_criteria["energy_efficiency"] * weights["energy_efficiency"]
             + (1 - int(model.soft_criteria["cached"])) * weights["cached"]
         )
 
     @classmethod
-    def generate_key_function(cls, hard_criteria: HardCriteria, weights: SoftCriteriaWeights) -> Callable:
+    def generate_key_function(
+        cls, hard_criteria: HardCriteria, weights: SoftCriteriaWeights
+    ) -> Callable:
         def key_function(model: ModelCharacteristics):
             return cls._get_weighted_score(model, hard_criteria, weights)
 
@@ -73,53 +84,143 @@ class ModelCharacteristics:
 if __name__ == "__main__":
     models = [
         ModelCharacteristics(
-            hard_criteria={"model_type": "classification", "input_type": "image", "output_format": "text"},
-            soft_criteria={"energy_efficiency": 0.8, "accuracy": 0.9, "latency": 50, "cached": True},
+            hard_criteria={
+                "model_type": "classification",
+                "input_type": "image",
+                "output_format": "text",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.8,
+                "accuracy": 0.9,
+                "latency": 50,
+                "cached": True,
+            },
             version=1,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "regression", "input_type": "tabular", "output_format": "audio"},
-            soft_criteria={"energy_efficiency": 0.5, "accuracy": 0.7, "latency": 100, "cached": False},
+            hard_criteria={
+                "model_type": "regression",
+                "input_type": "tabular",
+                "output_format": "audio",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.5,
+                "accuracy": 0.7,
+                "latency": 100,
+                "cached": False,
+            },
             version=2,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "classification", "input_type": "text", "output_format": "image"},
-            soft_criteria={"energy_efficiency": 0.6, "accuracy": 0.8, "latency": 70, "cached": True},
+            hard_criteria={
+                "model_type": "classification",
+                "input_type": "text",
+                "output_format": "image",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.6,
+                "accuracy": 0.8,
+                "latency": 70,
+                "cached": True,
+            },
             version=3,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "regression", "input_type": "audio", "output_format": "tabular"},
-            soft_criteria={"energy_efficiency": 0.7, "accuracy": 0.85, "latency": 80, "cached": False},
+            hard_criteria={
+                "model_type": "regression",
+                "input_type": "audio",
+                "output_format": "tabular",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.7,
+                "accuracy": 0.85,
+                "latency": 80,
+                "cached": False,
+            },
             version=4,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "classification", "input_type": "image", "output_format": "audio"},
-            soft_criteria={"energy_efficiency": 0.9, "accuracy": 0.95, "latency": 30, "cached": True},
+            hard_criteria={
+                "model_type": "classification",
+                "input_type": "image",
+                "output_format": "audio",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.9,
+                "accuracy": 0.95,
+                "latency": 30,
+                "cached": True,
+            },
             version=5,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "regression", "input_type": "tabular", "output_format": "text"},
-            soft_criteria={"energy_efficiency": 0.8, "accuracy": 0.6, "latency": 90, "cached": False},
+            hard_criteria={
+                "model_type": "regression",
+                "input_type": "tabular",
+                "output_format": "text",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.8,
+                "accuracy": 0.6,
+                "latency": 90,
+                "cached": False,
+            },
             version=6,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "classification", "input_type": "audio", "output_format": "tabular"},
-            soft_criteria={"energy_efficiency": 0.7, "accuracy": 0.75, "latency": 60, "cached": True},
+            hard_criteria={
+                "model_type": "classification",
+                "input_type": "audio",
+                "output_format": "tabular",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.7,
+                "accuracy": 0.75,
+                "latency": 60,
+                "cached": True,
+            },
             version=7,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "regression", "input_type": "text", "output_format": "image"},
-            soft_criteria={"energy_efficiency": 0.6, "accuracy": 0.85, "latency": 40, "cached": False},
+            hard_criteria={
+                "model_type": "regression",
+                "input_type": "text",
+                "output_format": "image",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.6,
+                "accuracy": 0.85,
+                "latency": 40,
+                "cached": False,
+            },
             version=8,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "classification", "input_type": "image", "output_format": "tabular"},
-            soft_criteria={"energy_efficiency": 0.9, "accuracy": 0.99, "latency": 20, "cached": True},
+            hard_criteria={
+                "model_type": "classification",
+                "input_type": "image",
+                "output_format": "tabular",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.9,
+                "accuracy": 0.99,
+                "latency": 20,
+                "cached": True,
+            },
             version=9,
         ),
         ModelCharacteristics(
-            hard_criteria={"model_type": "regression", "input_type": "tabular", "output_format": "audio"},
-            soft_criteria={"energy_efficiency": 0.5, "accuracy": 0.8, "latency": 120, "cached": False},
+            hard_criteria={
+                "model_type": "regression",
+                "input_type": "tabular",
+                "output_format": "audio",
+            },
+            soft_criteria={
+                "energy_efficiency": 0.5,
+                "accuracy": 0.8,
+                "latency": 120,
+                "cached": False,
+            },
             version=10,
         ),
     ]
@@ -127,7 +228,11 @@ if __name__ == "__main__":
     sorted = sorted(
         models,
         key=ModelCharacteristics.generate_key_function(
-            hard_criteria={"model_type": "regression", "input_type": "tabular", "output_format": "audio"},
+            hard_criteria={
+                "model_type": "regression",
+                "input_type": "tabular",
+                "output_format": "audio",
+            },
             weights={
                 "energy_efficiency": 1,
                 "accuracy": 1,
