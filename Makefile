@@ -22,6 +22,9 @@ install-dev: venv         ## Install developer requirements into venv
 
 install: install-dev  	  ## Install into venv
 
+init-pre-commit: venv     ## Install pre-commit hooks
+	$(VENV_RUN); pre-commit install
+
 clean: 				  	  ## Remove all build, test, coverage and Python artifacts
 	rm -fr build/
 	rm -fr dist/
