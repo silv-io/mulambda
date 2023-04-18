@@ -1,0 +1,2 @@
+openai_org_id = "<set-this-in-secrets>"
+openai_api_key = "<set-this-in-secrets>"
