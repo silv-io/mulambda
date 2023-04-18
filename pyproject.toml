@@ -2,6 +2,39 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "mulambda"
+authors = [
+    { name = "Silvio Vasiljevic", email = "silvio.vasiljevic@gmail.com" }
+]
+dynamic = ["version"]
+description = "A Serverless Platform for Automated Machine Learning"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "typer"
+]
+
+[project.optional-dependencies]
+dev = ["pytest",
+    "black",
+    "ruff"
+]
+
+[project.scripts]
+mulambda = "mulambda.api.serve:app"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["mulambda*"]
+exclude = ["assets*", "tests*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "mulambda.__version__" }
+
 [tool.ruff]
 # pyflakes, pycodestyle, isort
 select = ["F", "E", "W", "I001"]
