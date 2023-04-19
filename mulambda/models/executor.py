@@ -41,13 +41,14 @@ class IdentityExecutor(ModelExecutor):
         return f"[{self.identity}] received: {input_data}"
 
 
-# TODO add sleep timers and debug input and output handling
 class DebugExecutor(ModelExecutor):
     # mean and standard deviation of latency
     mu_latency: int
     sigma_latency: int
 
     def __init__(self, mu_latency: int = 100, sigma_latency: int = 20):
+        self.mu_latency = mu_latency
+        self.sigma_latency = sigma_latency
         super().__init__()
 
     def _calculate_random_latency(self):
