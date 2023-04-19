@@ -4,7 +4,7 @@ from mulambda.util import short_uid
 
 
 class HardCriteria(TypedDict):
-    model_type: Literal["classification", "regression", "dummy"]
+    model_type: Literal["classification", "regression", "dummy", "prompt"]
     input_type: Literal["image", "text", "audio", "video", "tabular"]
     output_format: Literal["image", "text", "audio", "video", "tabular"]
 
@@ -78,7 +78,10 @@ class ModelCharacteristics:
         return key_function
 
     def __repr__(self):
-        return f"ModelCharacteristics({self.hard_criteria}, {self.soft_criteria}, {self.version})"
+        return (
+            f"ModelCharacteristics({self.hard_criteria}, {self.soft_criteria},"
+            f"{self.version})"
+        )
 
 
 if __name__ == "__main__":
