@@ -21,5 +21,15 @@ class OpenAIExecutor(ModelExecutor):
 
 
 class OpenAIModelLister(OpenAIExecutor):
-    def _infer(self, input_data):
+    def _infer(self, _):
         return openai.Model.list()
+
+
+class GPTExecutor(OpenAIExecutor):
+    def _infer(self, input_data):
+        pass
+
+
+class DallEExecutor(OpenAIExecutor):
+    def _infer(self, input_data):
+        pass

@@ -10,3 +10,8 @@ class LocalExecutor(ModelExecutor):
 
     def _infer(self, input_data):
         return self.model(input_data)
+
+
+class RayExecutor(LocalExecutor):
+    def __init__(self, model: Callable):
+        super().__init__(model)

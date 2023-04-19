@@ -15,7 +15,8 @@ dependencies = [
     "numpy",
     "typer[all]",
     "openai",
-    "dynaconf"
+    "dynaconf",
+    "ray[serve]"
 ]
 
 [project.optional-dependencies]
