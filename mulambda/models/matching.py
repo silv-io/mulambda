@@ -9,10 +9,11 @@ class HardCriteria(TypedDict):
     output_format: Literal["image", "text", "audio", "video", "tabular"]
 
 
+# TODO add a cost vector
 class SoftCriteria(TypedDict):
     energy_efficiency: float  # in [0, 1]
     accuracy: float  # in [0, 1]
-    latency: int  # in ms
+    latency: int  # in ms # todo add historic latency
     cached: bool  # True if the model is cached
 
 
