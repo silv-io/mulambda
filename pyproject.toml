@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,13 +10,16 @@ authors = [
 dynamic = ["version"]
 description = "A Serverless Platform for Automated Machine Learning"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "typer[all]",
     "openai",
     "dynaconf",
-    "ray[serve]"
+    "ray[serve]",
+    "transformers",
+    "httpx",
+    "torch"
 ]
 
 [project.optional-dependencies]
@@ -27,7 +30,7 @@ dev = ["pytest",
 ]
 
 [project.scripts]
-mulambda = "mulambda.api.serve:app"
+mulambda = "mulambda.api.cli:app"
 
 [tool.setuptools]
 include-package-data = false
@@ -42,4 +45,4 @@ version = { attr = "mulambda.__version__" }
 [tool.ruff]
 # pyflakes, pycodestyle, isort
 select = ["F", "E", "W", "I001"]
-target-version = "py311"
+target-version = "py310"
