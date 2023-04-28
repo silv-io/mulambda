@@ -16,7 +16,7 @@ def main():
 def _serve():
     translator_1 = Translator.bind()
     translator_2 = Translator.bind()
-    models = {"translator_1": translator_1, "translator_2": translator_2}
+    models = [translator_1, translator_2]
     selector = ModelSelector.bind(models)
     # ingress = MulambdaIngress.bind(selector)
     ray.serve.run(selector)

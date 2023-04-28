@@ -1,7 +1,7 @@
 from ray import serve
 from transformers import pipeline
 
-from mulambda.infra.base_model import BaseModel
+from mulambda.infra.base_model import BaseModel, ModelInput
 
 
 @serve.deployment
@@ -20,6 +20,5 @@ class Translator(BaseModel):
 
         return translation
 
-    # TODO make proper model for this
-    def __call__(self, request: dict) -> str:
+    def __call__(self, request: ModelInput) -> str:
         return self.translate(request["input"])
