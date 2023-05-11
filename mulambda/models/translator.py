@@ -1,15 +1,15 @@
 from ray import serve
 from transformers import pipeline
 
-from mulambda.infra.base_model import BaseModel, ModelInput
+from mulambda.infra.base_model import BaseModelDeployment, ModelInput
 
 
 @serve.deployment
-class Translator(BaseModel):
-    def __init__(self):
+class TranslatorDeployment(BaseModelDeployment):
+    def __init__(self, model_id: str = "translation_en_to_fr"):
         super().__init__()
         # Load model
-        self.model = pipeline("translation_en_to_fr", model="t5-small")
+        self.model = pipeline(model_id, model="t5-small")
 
     def translate(self, text: str) -> str:
         # Run inference

@@ -1,11 +1,74 @@
 import abc
 from collections import UserDict
-from typing import Any, Dict, Generic, Literal, Tuple, TypeVar
+from typing import Any, Dict, Literal, Tuple
 
 from mulambda.util import Number
 
-ModelType = Literal["classification", "regression", "debug", "completion"]
+ModelType = Literal[
+    "classification", "regression", "debug", "completion", "translation"
+]
 DataType = Literal["image", "text", "audio", "video", "tabular"]
+
+
+class MatchedTrait(abc.ABC):
+    def __init__(self, trait):
+        self.trait = trait
+
+    @abc.abstractmethod
+    def match(self, other) -> bool:
+        raise NotImplementedError
+
+
+class EqualityTrait(MatchedTrait):
+    def match(self, other) -> bool:
+        return self.trait == other
+
+
+class MinTrait(MatchedTrait):
+    def match(self, other) -> bool:
+        return self.trait <= other
+
+
+class MaxTrait(MatchedTrait):
+    def match(self, other) -> bool:
+        return self.trait >= other
+
+
+class RequiredTraits(UserDict):
+    def __init__(
+        self,
+        model_type: EqualityTrait,
+        input_type: EqualityTrait,
+        output_format: EqualityTrait,
+        **kwargs,
+    ):
+        super().__init__()
+        self.data: Dict[str, MatchedTrait] = {
+            "type": model_type,
+            "input": input_type,
+            "output": output_format,
+        } | kwargs
+
+
+class DesiredTraitWeights(UserDict):
+    # use negative weights for traits that should be maximized
+    def __init__(
+        self,
+        latency: int,
+        accuracy: int,
+        **kwargs,
+    ):
+        super().__init__()
+        self.data: Dict[str, Any] = {
+            "latency": latency,
+            "accuracy": accuracy,
+        } | kwargs
+
+
+class NormalizationRanges(UserDict):
+    def __init__(self, latency: Tuple[int, int], **kwargs):
+        super().__init__()
+        self.data: Dict[str, Tuple[Number, Number]] = {"latency": latency} | kwargs
 
 
 class ModelTraits(UserDict):
@@ -29,72 +92,25 @@ class ModelTraits(UserDict):
             "accuracy": accuracy,
         } | kwargs
 
+    def hard_filter(self, required_traits: RequiredTraits) -> bool:
+        return all(
+            trait.match(self.data[key]) for key, trait in required_traits.items()
+        )
 
-TraitType = TypeVar("TraitType")
-
-
-class MatchedTrait(Generic[TraitType], abc.ABC):
-    def __init__(self, trait: TraitType):
-        self.trait = trait
-
-    @abc.abstractmethod
-    def match(self, other: TraitType) -> bool:
-        raise NotImplementedError
-
-
-class EqualityTrait(MatchedTrait):
-    def match(self, other: TraitType) -> bool:
-        return self.trait == other
-
-
-class MinTrait(MatchedTrait):
-    def match(self, other: TraitType) -> bool:
-        return self.trait <= other
-
-
-class MaxTrait(MatchedTrait):
-    def match(self, other: TraitType) -> bool:
-        return self.trait >= other
-
-
-class RequiredTraits(UserDict):
-    def __init__(
+    def sort_key(
         self,
-        model_type: EqualityTrait[
-            Literal["classification", "regression", "dummy", "prompt"]
-        ],
-        input_type: EqualityTrait[
-            Literal["image", "text", "audio", "video", "tabular"]
-        ],
-        output_format: EqualityTrait[
-            Literal["image", "text", "audio", "video", "tabular"]
-        ],
-        **kwargs,
-    ):
-        super().__init__()
-        self.data: Dict[str, MatchedTrait] = {
-            "model_type": model_type,
-            "input_type": input_type,
-            "output_format": output_format,
-        } | kwargs
+        weights: DesiredTraitWeights,
+        ranges: NormalizationRanges,
+    ) -> float:
+        def _normalize(key, value):
+            if key not in ranges:
+                return value
+            min_, max_ = ranges[key]
+            return (value - min_) / (max_ - min_)
 
-
-class DesiredTraitWeights(UserDict):
-    # use negative weights for traits that should be maximized
-    def __init__(
-        self,
-        latency: int,
-        accuracy: int,
-        **kwargs,
-    ):
-        super().__init__()
-        self.data: Dict[str, Any] = {
-            "latency": latency,
-            "accuracy": accuracy,
-        } | kwargs
-
-
-class NormalizationRanges(UserDict):
-    def __init__(self, latency: Tuple[int, int], **kwargs):
-        super().__init__()
-        self.data: Dict[str, Tuple[Number, Number]] = {"latency": latency} | kwargs
+        normalized = {
+            k: _normalize(k, v) * weights.get(k, 0)
+            for k, v in self.data.items()
+            if v is not None and type(v) is Number
+        }
+        return 1 - sum(normalized.values())

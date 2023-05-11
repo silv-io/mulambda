@@ -4,12 +4,12 @@ from typing import Any
 import numpy as np
 from ray import serve
 
-from mulambda.infra.base_model import BaseModel, ModelInput
+from mulambda.infra.base_model import BaseModelDeployment, ModelInput
 from mulambda.util import short_uid
 
 
 @serve.deployment
-class LatencyModel(BaseModel):
+class LatencyModel(BaseModelDeployment):
     mu: float
     sigma: float
 
@@ -28,7 +28,7 @@ class LatencyModel(BaseModel):
 
 
 @serve.deployment
-class IdentityModel(BaseModel):
+class IdentityModel(BaseModelDeployment):
     identity: str
 
     def __init__(self, identity: str = None):

@@ -3,10 +3,10 @@ import abc
 import openai
 
 from mulambda.config import settings
-from mulambda.infra.base_model import BaseModel
+from mulambda.infra.base_model import BaseModelDeployment
 
 
-class OpenAiModel(BaseModel, abc.ABC):
+class OpenAiModel(BaseModelDeployment, abc.ABC):
     openai_api_key: str
     openai_org_id: str
     model_id: str | None
