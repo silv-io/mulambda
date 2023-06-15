@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mulambda
+spec:
+  selector:
+    matchLabels:
+      app: mulambda
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mulambda
+    spec:
+      containers:
+      - name: mulambda
+        image: agihi/mulambda:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mulambda
+spec:
+  selector:
+    app: mulambda
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mulambda
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mulambda
+            port:
+              number: 80

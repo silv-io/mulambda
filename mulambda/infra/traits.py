@@ -37,16 +37,16 @@ class MaxTrait(MatchedTrait):
 class RequiredTraits(UserDict):
     def __init__(
         self,
-        model_type: EqualityTrait,
-        input_type: EqualityTrait,
-        output_format: EqualityTrait,
+        model_type: str,
+        input_type: str,
+        output_format: str,
         **kwargs,
     ):
         super().__init__()
         self.data: Dict[str, MatchedTrait] = {
-            "type": model_type,
-            "input": input_type,
-            "output": output_format,
+            "type": EqualityTrait(model_type),
+            "input": EqualityTrait(input_type),
+            "output": EqualityTrait(output_format),
         } | kwargs
 
 
@@ -111,6 +111,6 @@ class ModelTraits(UserDict):
         normalized = {
             k: _normalize(k, v) * weights.get(k, 0)
             for k, v in self.data.items()
-            if v is not None and type(v) is Number
+            if v is not None and (type(v) is int or type(v) is float)
         }
         return 1 - sum(normalized.values())

@@ -10,27 +10,25 @@ authors = [
 dynamic = ["version"]
 description = "A Serverless Platform for Automated Machine Learning"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "numpy",
-    "typer[all]",
-    "openai",
     "dynaconf",
-    "ray[serve]",
-    "transformers",
     "httpx",
-    "torch"
+    "fastapi",
+    "uvicorn[standard]",
+    "numpy",
+    "kubernetes"
 ]
 
 [project.optional-dependencies]
 dev = ["pytest",
-    "black",
+    "black[d]",
     "ruff",
     "pre-commit"
 ]
 
 [project.scripts]
-mulambda = "mulambda.api.cli:app"
+mulambda = "mulambda.api.app:main"
 
 [tool.setuptools]
 include-package-data = false
