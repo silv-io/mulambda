@@ -1,0 +1,10 @@
+.venv
+assets
+.github
+.git
+.gitignore
+.pre-commit-config.yaml
+Dockerfile
+k8s/mulambda.yaml
+tests
+*.egg-info

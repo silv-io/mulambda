@@ -2,14 +2,12 @@ import time
 from typing import Any
 
 import numpy as np
-from ray import serve
 
-from mulambda.infra.base_model import BaseModelDeployment, ModelInput
+from mulambda.infra.base_model import BaseModelBackend, ModelInput
 from mulambda.util import short_uid
 
 
-@serve.deployment
-class LatencyModel(BaseModelDeployment):
+class LatencyModel(BaseModelBackend):
     mu: float
     sigma: float
 
@@ -27,8 +25,7 @@ class LatencyModel(BaseModelDeployment):
         return request["input"]
 
 
-@serve.deployment
-class IdentityModel(BaseModelDeployment):
+class IdentityModel(BaseModelBackend):
     identity: str
 
     def __init__(self, identity: str = None):
