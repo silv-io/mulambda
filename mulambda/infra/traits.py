@@ -1,13 +1,8 @@
 import abc
 from collections import UserDict
-from typing import Any, Dict, Literal, Tuple
+from typing import Any, Dict, Tuple
 
 from mulambda.util import Number
-
-ModelType = Literal[
-    "classification", "regression", "debug", "completion", "translation"
-]
-DataType = Literal["image", "text", "audio", "video", "tabular"]
 
 
 class MatchedTrait(abc.ABC):
@@ -75,9 +70,9 @@ class ModelTraits(UserDict):
     def __init__(
         self,
         identity: str,
-        model_type: ModelType,
-        input_type: DataType,
-        output_type: DataType,
+        model_type: str,
+        input_type: str,
+        output_type: str,
         latency: int,
         accuracy: float,
         **kwargs,
@@ -91,6 +86,18 @@ class ModelTraits(UserDict):
             "latency": latency,
             "accuracy": accuracy,
         } | kwargs
+
+    @staticmethod
+    def from_redis(data: Dict[str, str]) -> "ModelTraits":
+        print(data)
+        return ModelTraits(
+            identity=data["id"],
+            model_type=data["type"],
+            input_type=data["input"],
+            output_type=data["output"],
+            latency=int(data["latency"]),
+            accuracy=float(data["accuracy"]),
+        )
 
     def hard_filter(self, required_traits: RequiredTraits) -> bool:
         return all(

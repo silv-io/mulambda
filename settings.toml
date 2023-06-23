@@ -1,7 +1,6 @@
-openai_org_id = "<set-this-in-secrets>"
-openai_api_key = "<set-this-in-secrets>"
+[network]
+redis = "dragonfly"
+base = "default.svc.cluster.local"
 
-openai_max_tokens = 7
-openai_temperature = 0.2
-
-loaded_models = ["ada"]
+[companion]
+model = "test"

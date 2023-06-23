@@ -1,7 +1,9 @@
 import logging
 from typing import Any, Dict, List, Tuple
 
-from mulambda.infra.base_model import BaseModelBackend, ModelInput
+from redis import asyncio as aioredis
+
+from mulambda.config import settings
 from mulambda.infra.traits import (
     DesiredTraitWeights,
     ModelTraits,
@@ -11,14 +13,16 @@ from mulambda.infra.traits import (
 
 LOG = logging.getLogger(__name__)
 
+Endpoint = str
+
 
 class ModelSelector:
-    models: List[Tuple[ModelTraits, BaseModelBackend]]
+    models: List[Tuple[ModelTraits, Endpoint]]
 
-    def __init__(self, models: List[Tuple[ModelTraits, BaseModelBackend]]):
-        self.models = models
+    def __init__(self):
+        self.models = []
 
-    def append(self, model: Tuple[ModelTraits, BaseModelBackend]):
+    def append(self, model: Tuple[ModelTraits, Endpoint]):
         self.models.append(model)
 
     def _select(
@@ -26,11 +30,11 @@ class ModelSelector:
         required: RequiredTraits,
         weights: DesiredTraitWeights,
         ranges: NormalizationRanges,
-    ) -> Tuple[ModelTraits, BaseModelBackend]:
+    ) -> Tuple[ModelTraits, Endpoint]:
         filtered = [model for model in self.models if model[0].hard_filter(required)]
         return min(filtered, key=lambda model: model[0].sort_key(weights, ranges))
 
-    async def __call__(self, request: Dict[str, Any]) -> str:
+    def __call__(self, request: Dict[str, Any]) -> Dict[str, Any]:
         required = RequiredTraits(
             request["required"]["type"],
             request["required"]["input"],
@@ -43,6 +47,27 @@ class ModelSelector:
 
         traits, selected = self._select(required, weights, ranges)
 
-        result = await selected(ModelInput(input=request["input"]))
+        return {
+            "endpoint": selected,
+            "model": traits.data,
+        }
 
-        return f"model {traits['id']} returned {result}"
+    async def ingest_models(self, r: aioredis.Redis):
+        model_ids = await r.smembers("models")
+        for model_id in model_ids:
+            await r.hgetall(model_id)
+            traits = ModelTraits.from_redis(await r.hgetall(model_id))
+            endpoint = f"{model_id}.{settings.network.base}"
+            self.models.append((traits, endpoint))
+
+
+async def get_selector() -> ModelSelector:
+    redis = await aioredis.from_url(
+        f"redis://{settings.network.redis}{settings.network.base}",
+        # "redis://localhost:6379",
+        encoding="utf-8",
+        decode_responses=True,
+    )
+    selector = ModelSelector()
+    await selector.ingest_models(redis)
+    return selector

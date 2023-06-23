@@ -4,7 +4,7 @@ PIP_CMD ?= pip
 VENV_ACTIVATE = $(VENV_DIR)/bin/activate
 VENV_RUN = . $(VENV_ACTIVATE)
 
-$(VENV_ACTIVATE): pyproject.toml
+$(VENV_ACTIVATE): requirements.txt
 	test -d $(VENV_DIR) || $(VENV_BIN) $(VENV_DIR)
 	$(VENV_RUN); $(PIP_CMD) install --upgrade pip setuptools
 	touch $(VENV_ACTIVATE)
@@ -23,13 +23,25 @@ install-dev: venv         ## Install developer requirements into venv
 install-docker: venv      ## Install docker requirements into venv
 	$(VENV_RUN); $(PIP_CMD) install $(PIP_OPTS) --no-cache-dir --upgrade -e "."
 
+install-requirements: venv
+	$(VENV_RUN); $(PIP_CMD) install $(PIP_OPTS) -r requirements.txt
+
 install: install-dev  	  ## Install into venv
 
 docker-build: venv        ## Build the docker image
-	$(VENV_RUN); docker build -t agihi/mulambda .
+	$(VENV_RUN)
+	docker build -t agihi/mulambda .
+	docker build -t agihi/mulambda-companion -f Dockerfile.companion .
+
+docker-push: venv
+	docker push agihi/mulambda
+	docker push agihi/mulambda-companion
 
 run: venv                 ## Run the application
-	$(VENV_RUN); uvicorn mulambda.api.app:app --host 0.0.0.0 --port 80
+	$(VENV_RUN); uvicorn mulambda.api.selector:app --host 0.0.0.0 --port 80
+
+run-companion: venv
+	$(VENV_RUN); python mulambda/api/companion.py
 
 kube-deploy-mulambda:
 	kubectl apply -f k8s/mulambda.yaml
