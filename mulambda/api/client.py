@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 import httpx
 import uvicorn
@@ -11,8 +12,8 @@ app = FastAPI()
 LOG = logging.getLogger(__name__)
 
 
-class AppInput(BaseModel):
-    data: str
+class TestInput(BaseModel):
+    inputs: List
 
 
 async def get_endpoint():
@@ -33,15 +34,29 @@ async def get_endpoint():
     selector = f"http://{settings.network.selector}.{settings.network.base}"
     async with httpx.AsyncClient() as client:
         response = await client.post(selector, json=selection_target)
-        LOG.debug(f"Selected model: {response.json()}")
-        return f"http://{response.json()['endpoint']}"
+        print(f"Selected model: {response.json()}")
+        traits = response.json()["model"]
+        return f"http://{response.json()['endpoint']}:{traits['port']}{traits['path']}"
 
 
 @app.post("/")
-async def read_root(app_input: AppInput, endpoint: str = Depends(get_endpoint)):
+async def read_root(test_input: TestInput, endpoint: str = Depends(get_endpoint)):
     async with httpx.AsyncClient() as client:
-        response = await client.post(endpoint, json=app_input.dict())
+        response = await client.post(endpoint, json=test_input.dict())
         return response.json()
+
+
+@app.post("/sim/")
+async def read_sim(amount: int = 10):
+    answers = []
+    async with httpx.AsyncClient() as client:
+        while amount > 0:
+            amount -= 1
+            test_input = TestInput(inputs=[1.0, 2.0, 3.0])
+            endpoint = await get_endpoint()
+            response = await client.post(endpoint, json=test_input.dict())
+            answers.append(response.json())
+    return answers
 
 
 if __name__ == "__main__":

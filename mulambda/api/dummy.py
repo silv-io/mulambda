@@ -1,3 +1,5 @@
+from typing import List
+
 import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -6,12 +8,12 @@ app = FastAPI()
 
 
 class ModelInput(BaseModel):
-    data: str
+    inputs: List
 
 
 @app.post("/")
 async def read_root(model_input: ModelInput):
-    return f"received: {model_input.data}"
+    return f"received: {model_input.inputs}"
 
 
 if __name__ == "__main__":

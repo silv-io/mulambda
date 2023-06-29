@@ -1,12 +1,8 @@
-#model:
-#  id: "dummymodel"
-#  type: "dummy"
-#  input: "text"
-#  output: "text"
-#  accuracy: "0.9"
-
+modelName: "test_model"
 modelId: "dummymodel"
 modelType: "dummy"
-modelInput: "text"
-modelOutput: "text"
-modelAccuracy: "0.9"
+modelInput: "floatvector"
+modelOutput: "floatvector"
+modelAccuracy: "1.0"
+requestPath: "/v1/models/test_model:predict"
+requestPort: "8500"

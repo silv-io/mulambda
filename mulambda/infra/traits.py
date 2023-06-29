@@ -75,6 +75,8 @@ class ModelTraits(UserDict):
         output_type: str,
         latency: int,
         accuracy: float,
+        path: str,
+        port: int,
         **kwargs,
     ):
         super().__init__()
@@ -85,11 +87,12 @@ class ModelTraits(UserDict):
             "output": output_type,
             "latency": latency,
             "accuracy": accuracy,
+            "path": path,
+            "port": port,
         } | kwargs
 
     @staticmethod
     def from_redis(data: Dict[str, str]) -> "ModelTraits":
-        print(data)
         return ModelTraits(
             identity=data["id"],
             model_type=data["type"],
@@ -97,6 +100,8 @@ class ModelTraits(UserDict):
             output_type=data["output"],
             latency=int(data["latency"]),
             accuracy=float(data["accuracy"]),
+            path=data["path"],
+            port=int(data["port"]),
         )
 
     def hard_filter(self, required_traits: RequiredTraits) -> bool:

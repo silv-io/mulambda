@@ -9,18 +9,21 @@ base = "mulambda.svc.cluster.local"
 
 [companion]
 [companion.model]
-id = "default"
-type = "translation"
-input = "text"
-output = "text"
+name = "test_model"
+id = "dummymodel"
+type = "dummy"
+input = "floatvector"
+output = "floatvector"
 latency = 9999
-accuracy = 0.8
+accuracy = 1.0
+path = "/v1/models/test_model:predict"
+port = 8500
 
 
 [client]
 model_type = "dummy"
-input_type = "text"
-output_type = "text"
+input_type = "floatvector"
+output_type = "floatvector"
 latency_weight = 0.5
 accuracy_weight = 0.5
 latency_range = [0, 1000]

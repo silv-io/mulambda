@@ -55,14 +55,28 @@ run-client: venv
 run-dummy: venv
 	$(VENV_RUN); uvicorn mulambda.api.dummy:app --host 0.0.0.0 --port 80
 
-kube-deploy:
+k3d-create:
+	mkdir -p $(HOME)/k8s/volume
+	k3d cluster create --volume $(HOME)/k8s/volume:/var/lib/rancher/k3s/storage@all
+
+kube-deploy-infra:
 	kubectl apply -f k8s/infra.yaml
-	helm install --generate-name ./k8s/backend-model --set modelId="test"
+	kubectl apply -f k8s/minio/localpvc.yaml
+	kubectl apply -f k8s/minio/minio.yaml
+
+kube-load-model: # TODO parametrize minio
+	mcli mb localminio/models
+	mcli cp -r ./assets/models/test_model localminio/models/test_model
+
+kube-deploy: kube-deploy-infra
+	helm install --generate-name ./k8s/backend-model --set modelName="test_model" --set modelId="demo"
 	kubectl apply -f k8s/mulambda.yaml
 	kubectl apply -f k8s/client.yaml
 
 kube-clear:
 	kubectl delete all --all -n mulambda
+
+
 
 init-pre-commit: venv     ## Install pre-commit hooks
 	$(VENV_RUN); pre-commit install

@@ -47,6 +47,8 @@ class ModelSelector:
 
         traits, selected = self._select(required, weights, ranges)
 
+        print(f"Selected model: {traits}")
+
         return {
             "endpoint": selected,
             "model": traits.data,
