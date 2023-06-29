@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.modelId }}
+  namespace: mulambda
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.modelId }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.modelId }}
+    spec:
+      containers:
+        - name: model
+          image: agihi/mulambda-dummy-model
+          ports:
+            - containerPort: 80
+        - name: companion
+          image: agihi/mulambda-companion
+          env:
+            - name: MULAMBDA_COMPANION__MODEL__ID
+              value: {{ .Values.modelId | quote }}
+            - name: MULAMBDA_COMPANION__MODEL__TYPE
+              value: {{ .Values.modelType | quote }}
+            - name: MULAMBDA_COMPANION__MODEL__INPUT
+              value: {{ .Values.modelInput | quote }}
+            - name: MULAMBDA_COMPANION__MODEL__OUTPUT
+              value: {{ .Values.modelOutput | quote }}
+            - name: MULAMBDA_COMPANION__MODEL__ACCURACY
+              value: {{ .Values.modelAccuracy | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.modelId }}
+  namespace: mulambda
+spec:
+  selector:
+    app: {{ .Values.modelId }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP

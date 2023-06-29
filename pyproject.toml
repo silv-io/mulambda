@@ -15,6 +15,7 @@ dependencies = [
     "dynaconf",
     "httpx",
     "fastapi",
+    "typer",
     "uvicorn[standard]",
     "numpy",
     "kubernetes",
@@ -29,7 +30,7 @@ dev = ["pytest",
 ]
 
 [project.scripts]
-mulambda = "mulambda.api.app:main"
+mulambda-companion = "mulambda.api.companion:app"
 
 [tool.setuptools]
 include-package-data = false

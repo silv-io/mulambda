@@ -1,19 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mulambda
+  name: model-selector-deployment
+  namespace: mulambda
 spec:
   selector:
     matchLabels:
-      app: mulambda
+      app: model-selector
   replicas: 1
   template:
     metadata:
       labels:
-        app: mulambda
+        app: model-selector
     spec:
       containers:
-      - name: mulambda
+      - name: model-selector
         image: agihi/mulambda:latest
         imagePullPolicy: Always
         ports:
@@ -22,10 +23,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mulambda
+  name: model-selector
+  namespace: mulambda
 spec:
   selector:
-    app: mulambda
+    app: model-selector
   ports:
   - protocol: TCP
     port: 80
@@ -35,7 +37,8 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: mulambda
+  name: model-selector-ingress
+  namespace: mulambda
   annotations:
     ingress.kubernetes.io/ssl-redirect: "false"
 spec:
@@ -46,6 +49,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: mulambda
+            name: model-selector
             port:
               number: 80

@@ -1,7 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: model-deployment
+  generateName: model-deployment-
+  namespace: mulambda
 spec:
   selector:
     matchLabels:
@@ -18,12 +19,16 @@ spec:
           ports:
             - containerPort: 80
         - name: companion
-          image: agihi/mulambda-companion:latest
+          image: agihi/mulambda-companion
+          env:
+            - name: MULAMBDA_COMPANION_MODEL_ID
+              value: {{ .Values.model.id }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: model-service
+  namespace: mulambda
 spec:
   selector:
     app: model

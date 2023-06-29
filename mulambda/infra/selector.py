@@ -61,13 +61,37 @@ class ModelSelector:
             self.models.append((traits, endpoint))
 
 
+class RoundRobinSelector(ModelSelector):
+    index: int
+
+    def __init__(self):
+        super().__init__()
+        self.index = 0
+
+    def _select(
+        self,
+        required: RequiredTraits,
+        weights: DesiredTraitWeights,
+        ranges: NormalizationRanges,
+    ) -> Tuple[ModelTraits, Endpoint]:
+        filtered = [model for model in self.models if model[0].hard_filter(required)]
+        selected = filtered[self.index % len(filtered)]
+        self.index += 1
+        return selected
+
+
+if settings.selector.type == "round-robin":
+    selector = RoundRobinSelector()
+else:
+    selector = ModelSelector()
+
+
 async def get_selector() -> ModelSelector:
     redis = await aioredis.from_url(
-        f"redis://{settings.network.redis}{settings.network.base}",
+        f"redis://{settings.network.redis}.{settings.network.base}",
         # "redis://localhost:6379",
         encoding="utf-8",
         decode_responses=True,
     )
-    selector = ModelSelector()
     await selector.ingest_models(redis)
     return selector

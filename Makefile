@@ -28,23 +28,41 @@ install-requirements: venv
 
 install: install-dev  	  ## Install into venv
 
-docker-build: venv        ## Build the docker image
+docker-build-base: venv
 	$(VENV_RUN)
 	docker build -t agihi/mulambda .
+
+docker-build-all: docker-build-base        ## Build the docker image
 	docker build -t agihi/mulambda-companion -f Dockerfile.companion .
+	docker build -t agihi/mulambda-client -f Dockerfile.client .
+	docker build -t agihi/mulambda-dummy-model -f Dockerfile.dummy .
 
 docker-push: venv
 	docker push agihi/mulambda
 	docker push agihi/mulambda-companion
+	docker push agihi/mulambda-client
+	docker push agihi/mulambda-dummy-model
 
 run: venv                 ## Run the application
 	$(VENV_RUN); uvicorn mulambda.api.selector:app --host 0.0.0.0 --port 80
 
 run-companion: venv
-	$(VENV_RUN); python mulambda/api/companion.py
+	$(VENV_RUN); mulambda-companion
 
-kube-deploy-mulambda:
+run-client: venv
+	$(VENV_RUN); uvicorn mulambda.api.client:app --host 0.0.0.0 --port 80
+
+run-dummy: venv
+	$(VENV_RUN); uvicorn mulambda.api.dummy:app --host 0.0.0.0 --port 80
+
+kube-deploy:
+	kubectl apply -f k8s/infra.yaml
+	helm install --generate-name ./k8s/backend-model --set modelId="test"
 	kubectl apply -f k8s/mulambda.yaml
+	kubectl apply -f k8s/client.yaml
+
+kube-clear:
+	kubectl delete all --all -n mulambda
 
 init-pre-commit: venv     ## Install pre-commit hooks
 	$(VENV_RUN); pre-commit install

@@ -1,0 +1,12 @@
+#model:
+#  id: "dummymodel"
+#  type: "dummy"
+#  input: "text"
+#  output: "text"
+#  accuracy: "0.9"
+
+modelId: "dummymodel"
+modelType: "dummy"
+modelInput: "text"
+modelOutput: "text"
+modelAccuracy: "0.9"

@@ -1,6 +1,26 @@
+[selector]
+type = "round-robin"
+
 [network]
 redis = "dragonfly"
-base = "default.svc.cluster.local"
+selector = "model-selector"
+client = "client-service"
+base = "mulambda.svc.cluster.local"
 
 [companion]
-model = "test"
+[companion.model]
+id = "default"
+type = "translation"
+input = "text"
+output = "text"
+latency = 9999
+accuracy = 0.8
+
+
+[client]
+model_type = "dummy"
+input_type = "text"
+output_type = "text"
+latency_weight = 0.5
+accuracy_weight = 0.5
+latency_range = [0, 1000]
