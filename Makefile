@@ -59,19 +59,29 @@ k3d-create:
 	mkdir -p $(HOME)/k8s/volume
 	k3d cluster create --volume $(HOME)/k8s/volume:/var/lib/rancher/k3s/storage@all
 
-kube-deploy-infra:
-	kubectl apply -f k8s/infra.yaml
-	kubectl apply -f k8s/minio/localpvc.yaml
-	kubectl apply -f k8s/minio/minio.yaml
+kube-local-deploy-infra:
+	kubectl apply -f k8s/local/infra.yaml
+	kubectl apply -f k8s/local/minio/localpvc.yaml
+	kubectl apply -f k8s/local/minio/minio.yaml
+
+kube-eb-cluster-deploy-infra:
+	kubectl apply -f k8s/eb-cluster/infra.yaml
+	kubectl apply -f k8s/eb-cluster/minio/localpvc.yaml
+	kubectl apply -f k8s/eb-cluster/minio/minio.yaml
 
 kube-load-model: # TODO parametrize minio
 	mcli mb localminio/models
 	mcli cp -r ./assets/models/test_model localminio/models/test_model
 
-kube-deploy: kube-deploy-infra
-	helm install --generate-name ./k8s/backend-model --set modelName="test_model" --set modelId="demo"
-	kubectl apply -f k8s/mulambda.yaml
-	kubectl apply -f k8s/client.yaml
+kube-local-deploy: kube-local-deploy-infra
+	helm install --generate-name ./k8s/local/backend-model --set modelName="test_model" --set modelId="demo"
+	kubectl apply -f k8s/local/mulambda.yaml
+	kubectl apply -f k8s/local/client.yaml
+
+kube-eb-cluster-deploy: kube-eb-cluster-deploy-infra
+	helm install --generate-name ./k8s/eb-cluster/backend-model --set modelName="test_model" --set modelId="demo"
+	kubectl apply -f k8s/eb-cluster/mulambda.yaml
+	kubectl apply -f k8s/eb-cluster/client.yaml
 
 kube-clear:
 	kubectl delete all --all -n mulambda

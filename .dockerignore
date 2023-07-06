@@ -5,6 +5,6 @@ assets
 .gitignore
 .pre-commit-config.yaml
 Dockerfile
-k8s/mulambda.yaml
+k8s/local/mulambda.yaml
 tests
 *.egg-info
