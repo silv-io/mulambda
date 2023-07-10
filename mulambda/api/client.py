@@ -1,14 +1,33 @@
 import logging
+from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import List
 
 import httpx
 import uvicorn
 from fastapi import Depends, FastAPI
 from pydantic import BaseModel
+from redis import asyncio as aioredis
 
 from mulambda.config import settings
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    ml_redis = await aioredis.from_url(
+        f"redis://{settings.network.redis}.{settings.network.base}",
+        # "redis://localhost:6379",
+        encoding="utf-8",
+        decode_responses=True,
+    )
+    await ml_redis.sadd("clients", settings.client.id)
+
+    yield
+
+    ml_redis.sdel("clients", settings.client.id)
+
+
+app = FastAPI(lifespan=lifespan)
 LOG = logging.getLogger(__name__)
 
 
@@ -16,19 +35,19 @@ class TestInput(BaseModel):
     inputs: List
 
 
-async def get_endpoint():
+async def get_dummy_endpoint():
     selection_target = {
         "required": {
-            "type": settings.client.model_type,
-            "input": settings.client.input_type,
-            "output": settings.client.output_type,
+            "type": "dummy",
+            "input": "floatvector",
+            "output": "floatvector",
         },
         "desired": {
-            "latency": settings.client.latency_weight,
-            "accuracy": settings.client.accuracy_weight,
+            "latency": -0.1,
+            "accuracy": 0.9,
         },
         "ranges": {
-            "latency": settings.client.latency_range,
+            "latency": [0, 1000],
         },
     }
     selector = f"http://{settings.network.selector}.{settings.network.base}"
@@ -40,9 +59,9 @@ async def get_endpoint():
 
 
 @app.post("/")
-async def read_root(test_input: TestInput, endpoint: str = Depends(get_endpoint)):
+async def read_root(test_input: TestInput, endpoint: str = Depends(get_dummy_endpoint)):
     async with httpx.AsyncClient() as client:
-        response = await client.post(endpoint, json=test_input.dict())
+        response = await client.post(endpoint, json=test_input.model_dump_json())
         return response.json()
 
 
@@ -53,10 +72,15 @@ async def read_sim(amount: int = 10):
         while amount > 0:
             amount -= 1
             test_input = TestInput(inputs=[1.0, 2.0, 3.0])
-            endpoint = await get_endpoint()
-            response = await client.post(endpoint, json=test_input.dict())
+            endpoint = await get_dummy_endpoint()
+            response = await client.post(endpoint, json=test_input.model_dump_json())
             answers.append(response.json())
     return answers
+
+
+@app.get("/perf")
+async def read_perf():
+    return {"arrival": datetime.now().isoformat()}
 
 
 if __name__ == "__main__":

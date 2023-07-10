@@ -57,7 +57,7 @@ run-dummy: venv
 
 k3d-create:
 	mkdir -p $(HOME)/k8s/volume
-	k3d cluster create --volume $(HOME)/k8s/volume:/var/lib/rancher/k3s/storage@all
+	k3d cluster create --volume $(HOME)/k8s/volume:/var/lib/rancher/k3s/storage@all --agents 4 --k3s-node-label "mulambda.vasiljevic.at/region=local@agent:0" --k3s-node-label "mulambda.vasiljevic.at/region=edge@agent:1" --k3s-node-label "mulambda.vasiljevic.at/region=datacenter@agent:2" --k3s-node-label "mulambda.vasiljevic.at/region=cloud@agent:3"
 
 kube-local-deploy-infra:
 	kubectl apply -f k8s/local/infra.yaml
@@ -69,9 +69,9 @@ kube-eb-cluster-deploy-infra:
 	kubectl apply -f k8s/eb-cluster/minio/localpvc.yaml
 	kubectl apply -f k8s/eb-cluster/minio/minio.yaml
 
-kube-load-model: # TODO parametrize minio
-	mcli mb localminio/models
-	mcli cp -r ./assets/models/test_model localminio/models/test_model
+kube-load-models:
+	mcli ls localminio/models || mcli mb localminio/models
+	mcli cp -r ./assets/models/* localminio/models
 
 kube-local-deploy: kube-local-deploy-infra
 	helm install --generate-name ./k8s/local/backend-model --set modelName="test_model" --set modelId="demo"

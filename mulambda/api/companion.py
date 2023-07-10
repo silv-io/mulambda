@@ -1,7 +1,7 @@
 import logging
-import random
 import time
 
+import httpx
 import typer
 from redis import Redis
 
@@ -12,8 +12,15 @@ app = typer.Typer()
 
 
 def get_latency(client_id: str) -> int:
-    # TODO get latency dynamically from client
-    return 100 + random.randint(-10, 10)
+    start_time = time.perf_counter()
+
+    # Your code or function to measure
+    httpx.get(f"http://{client_id}.{settings.network.base}")
+
+    end_time = time.perf_counter()
+    execution_time = end_time - start_time
+
+    return int(execution_time * 1000)
 
 
 @app.command()
@@ -29,9 +36,10 @@ def register():
     r.sadd("models", model.id)
     r.hset(model.id, mapping=model)
     while True:
-        curr_latency = get_latency("client")
-        print(f"Updating latency to {curr_latency}")
-        r.hset(model.id, "latency", curr_latency)
+        clients = r.smembers("clients")
+        for client in clients:
+            curr_latency = get_latency(client)
+            r.hset(model.id, "latency", curr_latency)
         time.sleep(30)
 
 

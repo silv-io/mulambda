@@ -21,9 +21,4 @@ port = 8500
 
 
 [client]
-model_type = "dummy"
-input_type = "floatvector"
-output_type = "floatvector"
-latency_weight = 0.5
-accuracy_weight = 0.5
-latency_range = [0, 1000]
+id = "client"
