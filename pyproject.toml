@@ -31,6 +31,7 @@ dev = ["pytest",
 
 [project.scripts]
 mulambda-companion = "mulambda.api.companion:app"
+mulambda-experiment = "mulambda.api.experiment:app"
 
 [tool.setuptools]
 include-package-data = false

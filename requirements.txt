@@ -4,7 +4,7 @@ annotated-types==0.5.0
 anyio==3.7.1
 async-timeout==4.0.2
 attrs==23.1.0
-black==23.3.0
+black==23.7.0
 cachetools==5.3.1
 certifi==2023.5.7
 cfgv==3.3.1

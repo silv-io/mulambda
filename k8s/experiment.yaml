@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: exp-$EXP_NAME-$EXP_ID
+  namespace: mulambda
+spec:
+  template:
+    spec:
+      containers:
+      - name: experiment-job
+        image: agihi/mulambda:latest
+        command: ["make", "run-experiment"]
+        imagePullPolicy: Always
+        env:
+          - name: MULAMBDA_EXPERIMENT__NAME
+            value: "$EXP_NAME"
+          - name: MULAMBDA_EXPERIMENT__ID
+            value: "$EXP_ID"
+      restartPolicy: Never

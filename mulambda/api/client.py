@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from redis import asyncio as aioredis
 
 from mulambda.config import settings
+from mulambda.util import REDIS_CLIENTS
 
 
 @asynccontextmanager
@@ -20,11 +21,11 @@ async def lifespan(app: FastAPI):
         encoding="utf-8",
         decode_responses=True,
     )
-    await ml_redis.sadd("clients", settings.client.id)
+    await ml_redis.sadd(REDIS_CLIENTS, settings.client.id)
 
     yield
 
-    ml_redis.sdel("clients", settings.client.id)
+    ml_redis.sdel(REDIS_CLIENTS, settings.client.id)
 
 
 app = FastAPI(lifespan=lifespan)

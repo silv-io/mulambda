@@ -3,8 +3,8 @@ type = "round-robin"
 
 [network]
 redis = "dragonfly"
-selector = "model-selector"
-client = "client-service"
+selector = "selector"
+minio = "minio"
 base = "mulambda.svc.cluster.local"
 
 [companion]
@@ -22,3 +22,7 @@ port = 8500
 
 [client]
 id = "client"
+
+[experiment]
+name = "test"
+author = "silv-io"

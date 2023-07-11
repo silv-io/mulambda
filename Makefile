@@ -43,6 +43,9 @@ run-client: venv
 run-dummy: venv
 	$(VENV_RUN); uvicorn mulambda.api.dummy:app --host 0.0.0.0 --port 80
 
+run-experiment: venv
+	$(VENV_RUN); mulambda-experiment
+
 k3d-create:
 	mkdir -p $(HOME)/k8s/volume
 	k3d cluster create --volume $(HOME)/k8s/volume:/var/lib/rancher/k3s/storage@all --agents 4 --k3s-node-label "mulambda.vasiljevic.at/region=local@agent:0" --k3s-node-label "mulambda.vasiljevic.at/region=edge@agent:1" --k3s-node-label "mulambda.vasiljevic.at/region=datacenter@agent:2" --k3s-node-label "mulambda.vasiljevic.at/region=cloud@agent:3"
@@ -73,6 +76,12 @@ MODEL_PORT ?= 8500
 export MODEL_NAME MODEL_ID MODEL_TYPE MODEL_INPUT MODEL_OUTPUT MODEL_ACCURACY MODEL_PATH MODEL_PORT
 kube-deploy-tf-model:
 	cat ./k8s/tf-model.yaml | envsubst | kubectl apply -f -
+
+EXP_NAME ?= test
+EXP_ID ?= $(shell date +%Y%m%d%k%M%S)
+export EXP_NAME EXP_ID
+kube-run-experiment-job:
+	cat ./k8s/experiment.yaml | envsubst | kubectl apply -f -
 
 kube-deploy-all: kube-deploy-infra kube-deploy-tf-model kube-deploy-client
 
