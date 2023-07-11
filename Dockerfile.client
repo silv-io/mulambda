@@ -1,3 +1,0 @@
-FROM agihi/mulambda
-
-ENTRYPOINT ["make", "run-client"]

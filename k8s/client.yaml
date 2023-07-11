@@ -1,24 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client-deployment
+  name: $CLIENT_ID
   namespace: mulambda
 spec:
   selector:
     matchLabels:
-      app: client-app
+      app: $CLIENT_ID
   replicas: 1
   template:
     metadata:
       labels:
-        app: client-app
+        app: $CLIENT_ID
     spec:
       containers:
       - name: mulambda
-        image: agihi/mulambda-client
+        image: agihi/mulambda:latest
+        command: ["make", "run-client"]
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        env:
+          - name: MULAMBDA_CLIENT__ID
+            value: "$CLIENT_ID"
       nodeSelector:
         ether.edgerun.io/zone: zone-c
         node-role.kubernetes.io/worker: "true"
@@ -26,11 +30,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: client
+  name: $CLIENT_ID
   namespace: mulambda
 spec:
   selector:
-    app: client-app
+    app: $CLIENT_ID
   ports:
   - protocol: TCP
     port: 80

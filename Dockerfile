@@ -1,14 +1,16 @@
 FROM python:3.11
 
 WORKDIR /code
-COPY Makefile /code/Makefile
 
 # copy requirements
 COPY requirements.txt /code/requirements.txt
-# make venv
-RUN make venv
+# make venv and install requ
+RUN python -m venv .venv && \
+    . .venv/bin/activate &&  \
+    pip install --upgrade pip setuptools && \
+    pip install -r requirements.txt
+
 # pip install requirements
-RUN make install-requirements
 
 COPY . /code
 

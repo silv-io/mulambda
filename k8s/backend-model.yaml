@@ -2,18 +2,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: {{ .Values.modelId }}
-  name: {{ .Values.modelId }}
+    app: "$MODEL_ID"
+  name: "$MODEL_ID"
   namespace: mulambda
 spec:
   selector:
     matchLabels:
-      app: {{ .Values.modelId }}
+      app: "$MODEL_ID"
   replicas: 1
   template:
     metadata:
       labels:
-        app: {{ .Values.modelId }}
+        app: "$MODEL_ID"
     spec:
       containers:
         - name: model
@@ -22,8 +22,8 @@ spec:
           args:
             - --port=9000
             - --rest_api_port=8500
-            - --model_name={{ .Values.modelName }}
-            - --model_base_path=s3://models/{{ .Values.modelName }}
+            - --model_name=$MODEL_NAME
+            - --model_base_path=s3://models/$MODEL_NAME
           livenessProbe:
             initialDelaySeconds: 30
             periodSeconds: 30
@@ -42,27 +42,28 @@ spec:
             - name: S3_VERIFY_SSL
               value: "0"
             - name: S3_ENDPOINT
-              value: minio-service:9000
+              value: minio:9000
         - name: companion
-          image: agihi/mulambda-companion
+          image: agihi/mulambda:latest
+          command: ["make", "run-companion"]
           imagePullPolicy: Always
           env:
             - name: MULAMBDA_COMPANION__MODEL__ID
-              value: {{ .Values.modelId | quote }}
+              value: "$MODEL_ID"
             - name: MULAMBDA_COMPANION__MODEL__NAME
-              value: {{ .Values.modelName | quote }}
+              value: "$MODEL_NAME"
             - name: MULAMBDA_COMPANION__MODEL__TYPE
-              value: {{ .Values.modelType | quote }}
+              value: "$MODEL_TYPE"
             - name: MULAMBDA_COMPANION__MODEL__INPUT
-              value: {{ .Values.modelInput | quote }}
+              value: "$MODEL_INPUT"
             - name: MULAMBDA_COMPANION__MODEL__OUTPUT
-              value: {{ .Values.modelOutput | quote }}
+              value: "$MODEL_OUTPUT"
             - name: MULAMBDA_COMPANION__MODEL__ACCURACY
-              value: {{ .Values.modelAccuracy | quote }}
+              value: "$MODEL_ACCURACY"
             - name: MULAMBDA_COMPANION__MODEL__PATH
-              value: {{ .Values.requestPath | quote }}
+              value: "$MODEL_PATH"
             - name: MULAMBDA_COMPANION__MODEL__PORT
-              value: {{ .Values.requestPort | quote }}
+              value: "$MODEL_PORT"
       nodeSelector:
         ether.edgerun.io/zone: zone-c
         node-role.kubernetes.io/worker: "true"
@@ -70,11 +71,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.modelId }}
+  name: "$MODEL_ID"
   namespace: mulambda
 spec:
   selector:
-    app: {{ .Values.modelId }}
+    app: "$MODEL_ID"
   ports:
     - name: grpc-tf-serving
       port: 9000

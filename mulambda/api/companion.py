@@ -39,6 +39,7 @@ def register():
         clients = r.smembers("clients")
         for client in clients:
             curr_latency = get_latency(client)
+            print(f"Client {client} latency for model {model.id}: {curr_latency}")
             r.hset(model.id, "latency", curr_latency)
         time.sleep(30)
 

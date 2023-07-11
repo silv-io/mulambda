@@ -1,12 +1,7 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mulambda
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dragonfly-deployment
+  name: dragonfly
   namespace: mulambda
 spec:
   selector:
@@ -18,6 +13,9 @@ spec:
       labels:
         app: dragonfly
     spec:
+      nodeSelector:
+        ether.edgerun.io/zone: zone-c
+        node-role.kubernetes.io/controller: "true"
       containers:
         - name: dragonfly
           image: docker.dragonflydb.io/dragonflydb/dragonfly

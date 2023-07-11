@@ -61,7 +61,7 @@ async def get_dummy_endpoint():
 @app.post("/")
 async def read_root(test_input: TestInput, endpoint: str = Depends(get_dummy_endpoint)):
     async with httpx.AsyncClient() as client:
-        response = await client.post(endpoint, json=test_input.model_dump_json())
+        response = await client.post(endpoint, json=test_input.model_dump())
         return response.json()
 
 
@@ -73,7 +73,7 @@ async def read_sim(amount: int = 10):
             amount -= 1
             test_input = TestInput(inputs=[1.0, 2.0, 3.0])
             endpoint = await get_dummy_endpoint()
-            response = await client.post(endpoint, json=test_input.model_dump_json())
+            response = await client.post(endpoint, json=test_input.model_dump())
             answers.append(response.json())
     return answers
 

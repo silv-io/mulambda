@@ -23,25 +23,13 @@ install-dev: venv         ## Install developer requirements into venv
 install-docker: venv      ## Install docker requirements into venv
 	$(VENV_RUN); $(PIP_CMD) install $(PIP_OPTS) --no-cache-dir --upgrade -e "."
 
-install-requirements: venv
-	$(VENV_RUN); $(PIP_CMD) install $(PIP_OPTS) -r requirements.txt
-
 install: install-dev  	  ## Install into venv
 
-docker-build-base: venv
-	$(VENV_RUN)
-	docker build -t agihi/mulambda .
+docker-build-latest:
+	docker build -t agihi/mulambda:latest .
 
-docker-build-all: docker-build-base        ## Build the docker image
-	docker build -t agihi/mulambda-companion -f Dockerfile.companion .
-	docker build -t agihi/mulambda-client -f Dockerfile.client .
-	docker build -t agihi/mulambda-dummy-model -f Dockerfile.dummy .
-
-docker-push: venv
-	docker push agihi/mulambda
-	docker push agihi/mulambda-companion
-	docker push agihi/mulambda-client
-	docker push agihi/mulambda-dummy-model
+docker-push-latest: docker-build-latest
+	docker push agihi/mulambda:latest
 
 run: venv                 ## Run the application
 	$(VENV_RUN); uvicorn mulambda.api.selector:app --host 0.0.0.0 --port 80
@@ -59,34 +47,37 @@ k3d-create:
 	mkdir -p $(HOME)/k8s/volume
 	k3d cluster create --volume $(HOME)/k8s/volume:/var/lib/rancher/k3s/storage@all --agents 4 --k3s-node-label "mulambda.vasiljevic.at/region=local@agent:0" --k3s-node-label "mulambda.vasiljevic.at/region=edge@agent:1" --k3s-node-label "mulambda.vasiljevic.at/region=datacenter@agent:2" --k3s-node-label "mulambda.vasiljevic.at/region=cloud@agent:3"
 
-kube-local-deploy-infra:
-	kubectl apply -f k8s/local/infra.yaml
-	kubectl apply -f k8s/local/minio/localpvc.yaml
-	kubectl apply -f k8s/local/minio/minio.yaml
+kube-deploy-infra:
+	kubectl apply -f k8s/namespace.yaml
+	kubectl apply -f k8s/dragonfly.yaml
+	kubectl apply -f k8s/minio.yaml
+	kubectl apply -f k8s/selector.yaml
 
-kube-eb-cluster-deploy-infra:
-	kubectl apply -f k8s/eb-cluster/infra.yaml
-	kubectl apply -f k8s/eb-cluster/minio/localpvc.yaml
-	kubectl apply -f k8s/eb-cluster/minio/minio.yaml
-
-kube-load-models:
+kube-upload-models:
 	mcli ls localminio/models || mcli mb localminio/models
 	mcli cp -r ./assets/models/* localminio/models
 
-kube-local-deploy: kube-local-deploy-infra
-	helm install --generate-name ./k8s/local/backend-model --set modelName="test_model" --set modelId="demo"
-	kubectl apply -f k8s/local/mulambda.yaml
-	kubectl apply -f k8s/local/client.yaml
+CLIENT_ID ?= experiment-client
+export CLIENT_ID
+kube-deploy-client:
+	cat ./k8s/client.yaml | envsubst | kubectl apply -f -
 
-kube-eb-cluster-deploy: kube-eb-cluster-deploy-infra
-	helm install --generate-name ./k8s/eb-cluster/backend-model --set modelName="test_model" --set modelId="demo"
-	kubectl apply -f k8s/eb-cluster/mulambda.yaml
-	kubectl apply -f k8s/eb-cluster/client.yaml
+MODEL_NAME ?= test_model
+MODEL_ID ?= demo-model
+MODEL_TYPE ?= dummy
+MODEL_INPUT ?= floatvector
+MODEL_OUTPUT ?= floatvector
+MODEL_ACCURACY ?= 1.0
+MODEL_PATH ?= /v1/models/$(MODEL_NAME):predict
+MODEL_PORT ?= 8500
+export MODEL_NAME MODEL_ID MODEL_TYPE MODEL_INPUT MODEL_OUTPUT MODEL_ACCURACY MODEL_PATH MODEL_PORT
+kube-deploy-model:
+	cat ./k8s/backend-model.yaml | envsubst | kubectl apply -f -
 
-kube-clear:
+kube-deploy-all: kube-deploy-infra kube-deploy-model kube-deploy-client
+
+kube-teardown-all:
 	kubectl delete all --all -n mulambda
-
-
 
 init-pre-commit: venv     ## Install pre-commit hooks
 	$(VENV_RUN); pre-commit install
