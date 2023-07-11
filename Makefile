@@ -71,10 +71,10 @@ MODEL_ACCURACY ?= 1.0
 MODEL_PATH ?= /v1/models/$(MODEL_NAME):predict
 MODEL_PORT ?= 8500
 export MODEL_NAME MODEL_ID MODEL_TYPE MODEL_INPUT MODEL_OUTPUT MODEL_ACCURACY MODEL_PATH MODEL_PORT
-kube-deploy-model:
-	cat ./k8s/backend-model.yaml | envsubst | kubectl apply -f -
+kube-deploy-tf-model:
+	cat ./k8s/tf-model.yaml | envsubst | kubectl apply -f -
 
-kube-deploy-all: kube-deploy-infra kube-deploy-model kube-deploy-client
+kube-deploy-all: kube-deploy-infra kube-deploy-tf-model kube-deploy-client
 
 kube-teardown-all:
 	kubectl delete all --all -n mulambda
