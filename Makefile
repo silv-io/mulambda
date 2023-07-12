@@ -85,6 +85,12 @@ kube-run-experiment-job:
 
 kube-deploy-all: kube-deploy-infra kube-deploy-tf-model kube-deploy-client
 
+kube-clear-completed-jobs:
+	kubectl get jobs -n mulambda -o json | jq '.items[] | select(.status.completionTime) | .metadata.name' | xargs kubectl delete jobs
+
+kube-clear-all-jobs:
+	kubectl delete jobs n mulambda --all
+
 kube-teardown-all:
 	kubectl delete all --all -n mulambda
 

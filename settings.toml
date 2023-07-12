@@ -14,7 +14,6 @@ id = "dummymodel"
 type = "dummy"
 input = "floatvector"
 output = "floatvector"
-latency = 9999
 accuracy = 1.0
 path = "/v1/models/test_model:predict"
 port = 8500

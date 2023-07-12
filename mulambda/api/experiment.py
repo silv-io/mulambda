@@ -5,6 +5,7 @@ import typer
 from redis.client import Redis
 
 from mulambda.config import settings
+from mulambda.util import REDIS_CLIENTS
 
 app = typer.Typer()
 
@@ -24,7 +25,7 @@ def run():
         encoding="utf-8",
         decode_responses=True,
     )
-    client_id = next(iter(mulambda_redis.smembers("clients")))
+    client_id = next(iter(mulambda_redis.smembers(REDIS_CLIENTS)))
 
     # exp, telemd = get_experiment_clients()
 

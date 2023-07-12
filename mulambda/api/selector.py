@@ -15,11 +15,11 @@ class ModelRequirements(BaseModel):
     ranges: Dict[str, Tuple[float, float]]
 
 
-@app.post("/")
-async def read_root(
-    reqs: ModelRequirements, selector: ModelSelector = Depends(get_selector)
+@app.post("/select/{client_id}")
+async def select_for_client(
+    client_id, reqs: ModelRequirements, selector: ModelSelector = Depends(get_selector)
 ):
-    return selector(reqs.dict())
+    return selector(client_id, reqs.model_dump())
 
 
 if __name__ == "__main__":

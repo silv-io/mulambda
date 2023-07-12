@@ -42,7 +42,7 @@ def register():
             curr_latency = get_latency(client_id)
             print(f"Client {client_id} latency for model {model.id}: {curr_latency}")
             r.hset(f"{REDIS_LATENCIES}", f"{client_id}:{model.id}", curr_latency)
-            r.hset(f"{REDIS_MODELS}:{model.id}", "latency", curr_latency)
+            r.hset(f"{REDIS_MODELS}:{model.id}", f"latency:{client_id}", curr_latency)
         time.sleep(5)
 
 

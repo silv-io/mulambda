@@ -51,9 +51,12 @@ async def get_dummy_endpoint():
             "latency": [0, 1000],
         },
     }
-    selector = f"http://{settings.network.selector}.{settings.network.base}"
+    selector_url = (
+        f"http://{settings.network.selector}.{settings.network.base}"
+        f"/select/{settings.client.id}"
+    )
     async with httpx.AsyncClient() as client:
-        response = await client.post(selector, json=selection_target)
+        response = await client.post(selector_url, json=selection_target)
         print(f"Selected model: {response.json()}")
         traits = response.json()["model"]
         return f"http://{response.json()['endpoint']}:{traits['port']}{traits['path']}"

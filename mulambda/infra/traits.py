@@ -73,7 +73,7 @@ class ModelTraits(UserDict):
         model_type: str,
         input_type: str,
         output_type: str,
-        latency: int,
+        latencies: Dict[str, int],
         accuracy: float,
         path: str,
         port: int,
@@ -85,7 +85,7 @@ class ModelTraits(UserDict):
             "type": model_type,
             "input": input_type,
             "output": output_type,
-            "latency": latency,
+            "latencies": latencies,
             "accuracy": accuracy,
             "path": path,
             "port": port,
@@ -98,7 +98,11 @@ class ModelTraits(UserDict):
             model_type=data["type"],
             input_type=data["input"],
             output_type=data["output"],
-            latency=int(data["latency"]),
+            latencies={
+                k.removeprefix("latency:"): v
+                for k, v in data.items()
+                if k.startswith("latency:")
+            },
             accuracy=float(data["accuracy"]),
             path=data["path"],
             port=int(data["port"]),
@@ -113,16 +117,21 @@ class ModelTraits(UserDict):
         self,
         weights: DesiredTraitWeights,
         ranges: NormalizationRanges,
+        client_id: str,
     ) -> float:
+        client_specific = self.data.copy()
+        client_specific["latency"] = client_specific["latencies"][client_id]
+        del client_specific["latencies"]
+
         def _normalize(key, value):
             if key not in ranges:
                 return value
             min_, max_ = ranges[key]
             return (value - min_) / (max_ - min_)
 
-        normalized = {
+        weighted = {
             k: _normalize(k, v) * weights.get(k, 0)
-            for k, v in self.data.items()
+            for k, v in client_specific.items()
             if v is not None and (type(v) is int or type(v) is float)
         }
-        return 1 - sum(normalized.values())
+        return 1 - sum(weighted.values())
