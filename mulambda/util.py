@@ -1,12 +1,51 @@
+import json
+import time
 import uuid
-from typing import Union
+from typing import Dict, Union
+
+from redis.asyncio.client import Redis
+
+from mulambda.config import settings
 
 MULAMBDA = "\u03bc\u03bb"
 
-REDIS_PREFIX = "mulambda:"
-REDIS_MODELS = REDIS_PREFIX + "models"
-REDIS_CLIENTS = REDIS_PREFIX + "clients"
-REDIS_LATENCIES = REDIS_PREFIX + "latencies"
+MULAMBDA_PREFIX = "mulambda:"
+MULAMBDA_MODELS = MULAMBDA_PREFIX + "models"
+MULAMBDA_CLIENTS = MULAMBDA_PREFIX + "clients"
+MULAMBDA_LATENCIES = MULAMBDA_PREFIX + "latencies"
+
+GALILEO_CHANNEL = "galileo/events"
+GALILEO_METRIC = "mulambda"
+
+
+def get_metadata_server() -> Redis:
+    return Redis(
+        host=f"{settings.network.redis}.{settings.network.base}",
+        # host="localhost",
+        encoding="utf-8",
+        decode_responses=True,
+    )
+
+
+def get_galileo_server() -> Redis:
+    return Redis(
+        host=settings.galileo.redis.host,
+        password=settings.galileo.redis.password,
+        encoding="utf-8",
+        decode_responses=True,
+    )
+
+
+async def send_galileo_event(
+    event: Dict,
+    metric: str = GALILEO_METRIC,
+):
+    print(f"Sending event to Galileo: {event}")
+    galileo = get_galileo_server()
+    await galileo.publish(
+        GALILEO_CHANNEL, f"{time.time()} {metric} {json.dumps(event)}"
+    )
+    await galileo.close()
 
 
 def short_uid():

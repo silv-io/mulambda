@@ -1,54 +1,21 @@
-import time
-
 import httpx
-import typer
-from redis.client import Redis
 
-from mulambda.config import settings
-from mulambda.util import REDIS_CLIENTS
-
-app = typer.Typer()
+from mulambda.util import send_galileo_event
 
 
-# def get_experiment_clients():
-#     ctx = Context()
-#     rds = ctx.create_redis()
-#     g = init(rds)
-#     return g['exp'], ctx['telemd']
-
-
-@app.command()
-def run():
-    mulambda_redis = Redis(
-        host=f"{settings.network.redis}.{settings.network.base}",
-        # host="localhost",
-        encoding="utf-8",
-        decode_responses=True,
-    )
-    client_id = next(iter(mulambda_redis.smembers(REDIS_CLIENTS)))
-
-    # exp, telemd = get_experiment_clients()
-
-    print("Unpausing telemd...")
-    # telemd.start_telemd()
-    print(f"Starting experiment {settings.experiment.name}...")
-    # exp.start(
-    #    name=config.exp_name,
-    #    creator=config.creator,
-    #    metadata=metadata)
-    print("Sleeping for 1 second...")
-    time.sleep(1)
-
+async def async_run():
+    await send_galileo_event({"type": "start"})
     httpx.post(
-        f"http://{client_id}.{settings.network.base}", json={"inputs": [1, 2, 3]}
+        "http://experiment-client.mulambda.svc.cluster.local/sim-dummy/?amount=100&size=10"
     )
+    await send_galileo_event({"type": "end"})
 
-    print("Pausing telemd...")
-    # telemd.stop_telemd()
-    print("Stopping experiment...")
-    # exp.stop()
-    print("Experiment finished.")
+
+def run():
+    import asyncio
+
+    asyncio.run(async_run())
 
 
 if __name__ == "__main__":
-    app()
+    run()

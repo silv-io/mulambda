@@ -77,8 +77,14 @@ export MODEL_NAME MODEL_ID MODEL_TYPE MODEL_INPUT MODEL_OUTPUT MODEL_ACCURACY MO
 kube-deploy-tf-model:
 	cat ./k8s/tf-model.yaml | envsubst | kubectl apply -f -
 
+DUMMY_MEAN ?= 500
+DUMMY_STD ?= 100
+export DUMMY_MEAN DUMMY_STD
+kube-deploy-dummy-model:
+	cat ./k8s/dummy-model.yaml | envsubst ##| echo ## kubectl apply -f -
+
 EXP_NAME ?= test
-EXP_ID ?= $(shell date +%Y%m%d%k%M%S)
+EXP_ID ?= $(shell date +%Y%0m%0d%0k%0M%0S)
 export EXP_NAME EXP_ID
 kube-run-experiment-job:
 	cat ./k8s/experiment.yaml | envsubst | kubectl apply -f -
@@ -89,7 +95,7 @@ kube-clear-completed-jobs:
 	kubectl get jobs -n mulambda -o json | jq '.items[] | select(.status.completionTime) | .metadata.name' | xargs kubectl delete jobs
 
 kube-clear-all-jobs:
-	kubectl delete jobs n mulambda --all
+	kubectl delete jobs -n mulambda --all
 
 kube-teardown-all:
 	kubectl delete all --all -n mulambda

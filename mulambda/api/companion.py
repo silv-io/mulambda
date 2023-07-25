@@ -1,21 +1,28 @@
+import asyncio
 import logging
 import time
 
 import httpx
-import typer
-from redis import Redis
 
 from mulambda.config import settings
-from mulambda.util import REDIS_CLIENTS, REDIS_LATENCIES, REDIS_MODELS
+from mulambda.util import (
+    MULAMBDA_CLIENTS,
+    MULAMBDA_LATENCIES,
+    MULAMBDA_MODELS,
+    get_metadata_server,
+    send_galileo_event,
+)
 
 LOG = logging.getLogger(__name__)
-app = typer.Typer()
 
 
 def get_latency(client_id: str) -> int:
+    print(
+        f"Getting latency between client {client_id}"
+        f"and model {settings.companion.model.id}"
+    )
     start_time = time.perf_counter()
 
-    # Your code or function to measure
     httpx.get(f"http://{client_id}.{settings.network.base}/perf")
 
     end_time = time.perf_counter()
@@ -24,27 +31,46 @@ def get_latency(client_id: str) -> int:
     return int(execution_time * 1000)
 
 
-@app.command()
-def register():
-    r = Redis(
-        host=f"{settings.network.redis}.{settings.network.base}",
-        # host="localhost",
-        encoding="utf-8",
-        decode_responses=True,
-    )
+async def async_run():
     model = settings.companion.model
+    metadata = get_metadata_server()
+
     print(f"Registering model {model}")
-    r.sadd(REDIS_MODELS, model.id)
-    r.hset(f"{REDIS_MODELS}:{model.id}", mapping=model)
+    await asyncio.gather(
+        metadata.sadd(MULAMBDA_MODELS, model.id),
+        metadata.hset(f"{MULAMBDA_MODELS}:{model.id}", mapping=model),
+    )
+
     while True:
-        clients = r.smembers(REDIS_CLIENTS)
+        clients = await metadata.smembers(MULAMBDA_CLIENTS)
         for client_id in clients:
             curr_latency = get_latency(client_id)
             print(f"Client {client_id} latency for model {model.id}: {curr_latency}")
-            r.hset(f"{REDIS_LATENCIES}", f"{client_id}:{model.id}", curr_latency)
-            r.hset(f"{REDIS_MODELS}:{model.id}", f"latency:{client_id}", curr_latency)
-        time.sleep(5)
+            await asyncio.gather(
+                metadata.hset(
+                    f"{MULAMBDA_LATENCIES}", f"{client_id}:{model.id}", curr_latency
+                ),
+                metadata.hset(
+                    f"{MULAMBDA_MODELS}:{model.id}",
+                    f"latency:{client_id}",
+                    curr_latency,
+                ),
+            )
+            await send_galileo_event(
+                {
+                    "type": "companion",
+                    "client_id": client_id,
+                    "model": model.id,
+                    "latency": curr_latency,
+                },
+                "mulambda_companion",
+            )
+            await asyncio.sleep(5)
+
+
+def run():
+    asyncio.run(async_run())
 
 
 if __name__ == "__main__":
-    app()
+    run()

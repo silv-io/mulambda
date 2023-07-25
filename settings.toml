@@ -18,6 +18,10 @@ accuracy = 1.0
 path = "/v1/models/test_model:predict"
 port = 8500
 
+[dummy]
+mean = 3000
+std = 1000
+load = 0.5
 
 [client]
 id = "client"

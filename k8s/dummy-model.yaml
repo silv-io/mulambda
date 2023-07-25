@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: "$MODEL_ID"
+  name: "$MODEL_ID"
+  namespace: mulambda
+spec:
+  selector:
+    matchLabels:
+      app: "$MODEL_ID"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "$MODEL_ID"
+    spec:
+      containers:
+        - name: model
+          image: agihi/mulambda:latest
+          imagePullPolicy: IfNotPresent
+          command: ["make", "run-dummy"]
+          env:
+            - name: MULAMBDA_DUMMY__MEAN
+              value: "$DUMMY_MEAN"
+            - name: MULAMBDA_DUMMY__STD
+              value: "$DUMMY_STD"
+        - name: companion
+          image: agihi/mulambda:latest
+          command: ["make", "run-companion"]
+          imagePullPolicy: Always
+          env:
+            - name: MULAMBDA_COMPANION__MODEL__ID
+              value: "$MODEL_ID"
+            - name: MULAMBDA_COMPANION__MODEL__NAME
+              value: "$MODEL_NAME"
+            - name: MULAMBDA_COMPANION__MODEL__TYPE
+              value: "$MODEL_TYPE"
+            - name: MULAMBDA_COMPANION__MODEL__INPUT
+              value: "$MODEL_INPUT"
+            - name: MULAMBDA_COMPANION__MODEL__OUTPUT
+              value: "$MODEL_OUTPUT"
+            - name: MULAMBDA_COMPANION__MODEL__ACCURACY
+              value: "$MODEL_ACCURACY"
+            - name: MULAMBDA_COMPANION__MODEL__PATH
+              value: "$MODEL_PATH"
+            - name: MULAMBDA_COMPANION__MODEL__PORT
+              value: "$MODEL_PORT"
+      nodeSelector:
+        ether.edgerun.io/zone: zone-c
+        node-role.kubernetes.io/worker: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "$MODEL_ID"
+  namespace: mulambda
+spec:
+  selector:
+    app: "$MODEL_ID"
+  ports:
+    - name: grpc-tf-serving
+      port: 9000
+      targetPort: 9000
+    - name: http-tf-serving
+      port: 8500
+      targetPort: 8500
+  type: ClusterIP

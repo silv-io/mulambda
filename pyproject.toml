@@ -12,14 +12,12 @@ description = "A Serverless Platform for Automated Machine Learning"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "dynaconf",
-    "httpx",
-    "fastapi",
-    "typer",
-    "uvicorn[standard]",
-    "numpy",
-    "kubernetes",
-    "redis[hiredis]"
+    "dynaconf>=3.2",
+    "httpx>=0.24",
+    "fastapi>=0.100",
+    "uvicorn[standard]>=0.23",
+    "redis[hiredis]>=4.6",
+#    "edgerun-galileo-experiments",
 ]
 
 [project.optional-dependencies]
@@ -30,8 +28,8 @@ dev = ["pytest",
 ]
 
 [project.scripts]
-mulambda-companion = "mulambda.api.companion:app"
-mulambda-experiment = "mulambda.api.experiment:app"
+mulambda-companion = "mulambda.api.companion:run"
+mulambda-experiment = "mulambda.api.experiment:run"
 
 [tool.setuptools]
 include-package-data = false

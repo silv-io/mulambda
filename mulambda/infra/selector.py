@@ -1,7 +1,8 @@
 import logging
+import random
 from typing import Any, Dict, List, Tuple
 
-from redis import asyncio as aioredis
+from redis.asyncio.client import Redis
 
 from mulambda.config import settings
 from mulambda.infra.traits import (
@@ -10,7 +11,7 @@ from mulambda.infra.traits import (
     NormalizationRanges,
     RequiredTraits,
 )
-from mulambda.util import REDIS_MODELS
+from mulambda.util import MULAMBDA_MODELS, get_metadata_server
 
 LOG = logging.getLogger(__name__)
 
@@ -62,11 +63,11 @@ class ModelSelector:
             "model": traits.data,
         }
 
-    async def ingest_models(self, r: aioredis.Redis):
-        model_ids = await r.smembers(REDIS_MODELS)
+    async def ingest_models(self, r: Redis):
+        model_ids = await r.smembers(MULAMBDA_MODELS)
         for model_id in model_ids:
             traits = ModelTraits.from_redis(
-                await r.hgetall(f"{REDIS_MODELS}:{model_id}")
+                await r.hgetall(f"{MULAMBDA_MODELS}:{model_id}")
             )
             endpoint = f"{model_id}.{settings.network.base}"
             self.models.append((traits, endpoint))
@@ -92,6 +93,18 @@ class RoundRobinSelector(ModelSelector):
         return selected
 
 
+class RandomSelector(ModelSelector):
+    def _select(
+        self,
+        required: RequiredTraits,
+        weights: DesiredTraitWeights,
+        ranges: NormalizationRanges,
+        client_id: str,
+    ) -> Tuple[ModelTraits, Endpoint]:
+        filtered = [model for model in self.models if model[0].hard_filter(required)]
+        return random.choice(filtered)
+
+
 if settings.selector.type == "round-robin":
     selector = RoundRobinSelector()
 else:
@@ -99,11 +112,6 @@ else:
 
 
 async def get_selector() -> ModelSelector:
-    redis = await aioredis.from_url(
-        f"redis://{settings.network.redis}.{settings.network.base}",
-        # "redis://localhost:6379",
-        encoding="utf-8",
-        decode_responses=True,
-    )
+    redis = get_metadata_server()
     await selector.ingest_models(redis)
     return selector
