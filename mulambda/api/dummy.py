@@ -43,9 +43,12 @@ def calculate_confidence(model_input: ModelInput) -> float:
     else:
         base_confidence = 0.0
 
-    return base_confidence / (
-        len(model_input.inputs) / settings.dummy.confidence.size_impact
-    )
+    size_impact = float(settings.dummy.confidence.size_impact)
+    size = len(model_input.inputs)
+    if size == 0:
+        return 0.0
+    else:
+        return max(base_confidence - (1 - 1 / size) * (1 - size_impact), 0.0)
 
 
 async def simulate_load(model_input: ModelInput) -> float:
