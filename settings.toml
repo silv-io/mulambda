@@ -19,9 +19,17 @@ path = "/v1/models/test_model:predict"
 port = 8500
 
 [dummy]
-mean = 3000
-std = 1000
-load = 0.5
+[dummy.delay]
+base = 1000
+size_impact = 0.1
+concurrency_impact = 0.1
+max_jitter = 300
+[dummy.confidence]
+good = ["A"]
+mid = ["B"]
+bad = ["C"]
+size_impact = 0.1
+
 
 [client]
 id = "client"

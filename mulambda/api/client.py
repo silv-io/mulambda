@@ -36,7 +36,7 @@ class TestInput(BaseModel):
 async def get_dummy_model():
     return await get_model(
         required={"type": "dummy", "input": "floatvector", "output": "floatvector"},
-        desired={"latency": -0.1, "accuracy": 0.9},
+        desired={"latency": 0.1, "accuracy": 0.9},
         ranges={"latency": [0, 1000]},
         selector_url=(
             f"http://{settings.network.selector}.{settings.network.base}"

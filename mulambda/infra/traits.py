@@ -1,8 +1,6 @@
 import abc
 from collections import UserDict
-from typing import Any, Dict, Tuple
-
-from mulambda.util import Number
+from typing import Any, Dict
 
 
 class MatchedTrait(abc.ABC):
@@ -45,27 +43,6 @@ class RequiredTraits(UserDict):
         } | kwargs
 
 
-class DesiredTraitWeights(UserDict):
-    # use negative weights for traits that should be maximized
-    def __init__(
-        self,
-        latency: int,
-        accuracy: int,
-        **kwargs,
-    ):
-        super().__init__()
-        self.data: Dict[str, Any] = {
-            "latency": latency,
-            "accuracy": accuracy,
-        } | kwargs
-
-
-class NormalizationRanges(UserDict):
-    def __init__(self, latency: Tuple[int, int], **kwargs):
-        super().__init__()
-        self.data: Dict[str, Tuple[Number, Number]] = {"latency": latency} | kwargs
-
-
 class ModelTraits(UserDict):
     def __init__(
         self,
@@ -73,6 +50,7 @@ class ModelTraits(UserDict):
         model_type: str,
         input_type: str,
         output_type: str,
+        mdd: float,
         latencies: Dict[str, int],
         accuracy: float,
         path: str,
@@ -85,6 +63,7 @@ class ModelTraits(UserDict):
             "type": model_type,
             "input": input_type,
             "output": output_type,
+            "mdd": mdd,  # model data delay
             "latencies": latencies,
             "accuracy": accuracy,
             "path": path,
@@ -98,6 +77,7 @@ class ModelTraits(UserDict):
             model_type=data["type"],
             input_type=data["input"],
             output_type=data["output"],
+            mdd=float(data.get("mdd", 0)),
             latencies={
                 k.removeprefix("latency:"): v
                 for k, v in data.items()
@@ -113,25 +93,13 @@ class ModelTraits(UserDict):
             trait.match(self.data[key]) for key, trait in required_traits.items()
         )
 
-    def sort_key(
-        self,
-        weights: DesiredTraitWeights,
-        ranges: NormalizationRanges,
-        client_id: str,
-    ) -> float:
-        client_specific = self.data.copy()
-        client_specific["latency"] = client_specific["latencies"][client_id]
-        del client_specific["latencies"]
+    def estimate_latency(self, data_length: int, client_id: str) -> float:
+        return self.data["latencies"][client_id] + self.data["mdd"] * data_length
 
-        def _normalize(key, value):
-            if key not in ranges:
-                return value
-            min_, max_ = ranges[key]
-            return (value - min_) / (max_ - min_)
 
-        weighted = {
-            k: _normalize(k, v) * weights.get(k, 0)
-            for k, v in client_specific.items()
-            if v is not None and (type(v) is int or type(v) is float)
-        }
-        return 1 - sum(weighted.values())
+def estimate_performance(
+    traits: ModelTraits, data_length: int, client_id: str
+) -> (ModelTraits, float, float):
+    latency_estimate = traits.estimate_latency(data_length, client_id)
+    accuracy = traits["accuracy"]
+    return traits, latency_estimate, accuracy

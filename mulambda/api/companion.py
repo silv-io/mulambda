@@ -7,7 +7,6 @@ import httpx
 from mulambda.config import settings
 from mulambda.util import (
     MULAMBDA_CLIENTS,
-    MULAMBDA_LATENCIES,
     MULAMBDA_MODELS,
     get_metadata_server,
     send_galileo_event,
@@ -46,16 +45,11 @@ async def async_run():
         for client_id in clients:
             curr_latency = get_latency(client_id)
             print(f"Client {client_id} latency for model {model.id}: {curr_latency}")
-            await asyncio.gather(
-                metadata.hset(
-                    f"{MULAMBDA_LATENCIES}", f"{client_id}:{model.id}", curr_latency
-                ),
-                metadata.hset(
-                    f"{MULAMBDA_MODELS}:{model.id}",
-                    f"latency:{client_id}",
-                    curr_latency,
-                ),
-            )
+            metadata.hset(
+                f"{MULAMBDA_MODELS}:{model.id}",
+                f"latency:{client_id}",
+                curr_latency,
+            ),
             await send_galileo_event(
                 {
                     "type": "companion",

@@ -6,16 +6,19 @@ from redis.asyncio.client import Redis
 
 from mulambda.config import settings
 from mulambda.infra.traits import (
-    DesiredTraitWeights,
     ModelTraits,
-    NormalizationRanges,
     RequiredTraits,
+    estimate_performance,
 )
 from mulambda.util import MULAMBDA_MODELS, get_metadata_server
 
 LOG = logging.getLogger(__name__)
 
 Endpoint = str
+
+
+def get_score(weights: Dict[str, float], latency, accuracy) -> float:
+    return -weights["latency"] * latency + weights["accuracy"] * accuracy
 
 
 class ModelSelector:
@@ -30,14 +33,28 @@ class ModelSelector:
     def _select(
         self,
         required: RequiredTraits,
-        weights: DesiredTraitWeights,
-        ranges: NormalizationRanges,
+        weights: Dict[str, float],
+        data_length: int,
         client_id: str,
     ) -> Tuple[ModelTraits, Endpoint]:
         filtered = [model for model in self.models if model[0].hard_filter(required)]
-        return min(
-            filtered, key=lambda model: model[0].sort_key(weights, ranges, client_id)
-        )
+        estimate = [
+            (estimate_performance(model[0], data_length, client_id), model[1])
+            for model in filtered
+        ]
+        max_latency = max(estimate, key=lambda x: x[0][1])[0][1]
+        max_accuracy = max(estimate, key=lambda x: x[0][2])[0][2]
+        normalized = [
+            (
+                model[0][0],
+                model[0][1] / (max_latency * 1.2),
+                model[0][2] / (max_accuracy * 1.2),
+                model[1],
+            )
+            for model in estimate
+        ]
+        selected = max(normalized, key=lambda x: get_score(weights, x[1], x[2]))
+        return selected[0], selected[3]
 
     def __call__(
         self,
@@ -49,12 +66,10 @@ class ModelSelector:
             request["required"]["input"],
             request["required"]["output"],
         )
-        weights = DesiredTraitWeights(
-            request["desired"]["latency"], request["desired"]["accuracy"]
-        )
-        ranges = NormalizationRanges(request["ranges"]["latency"])
 
-        traits, selected = self._select(required, weights, ranges, client_id)
+        traits, selected = self._select(
+            required, request["desired"], request["data_length"], client_id
+        )
 
         print(f"Selected model: {traits}")
 
@@ -83,8 +98,8 @@ class RoundRobinSelector(ModelSelector):
     def _select(
         self,
         required: RequiredTraits,
-        weights: DesiredTraitWeights,
-        ranges: NormalizationRanges,
+        weights: Dict[str, float],
+        data_length: int,
         client_id: str,
     ) -> Tuple[ModelTraits, Endpoint]:
         filtered = [model for model in self.models if model[0].hard_filter(required)]
@@ -97,12 +112,24 @@ class RandomSelector(ModelSelector):
     def _select(
         self,
         required: RequiredTraits,
-        weights: DesiredTraitWeights,
-        ranges: NormalizationRanges,
+        weights: Dict[str, float],
+        data_length: int,
         client_id: str,
     ) -> Tuple[ModelTraits, Endpoint]:
         filtered = [model for model in self.models if model[0].hard_filter(required)]
         return random.choice(filtered)
+
+
+class PlainNetLatencySelector(ModelSelector):
+    def _select(
+        self,
+        required: RequiredTraits,
+        weights: Dict[str, float],
+        data_length: int,
+        client_id: str,
+    ) -> Tuple[ModelTraits, Endpoint]:
+        filtered = [model for model in self.models if model[0].hard_filter(required)]
+        return min(filtered, key=lambda x: x[0]["latencies"][client_id])
 
 
 if settings.selector.type == "round-robin":

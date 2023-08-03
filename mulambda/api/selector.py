@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict
 
 import uvicorn
 from fastapi import Depends, FastAPI
@@ -12,7 +12,7 @@ app = FastAPI()
 class ModelRequirements(BaseModel):
     required: Dict[str, str]
     desired: Dict[str, float]
-    ranges: Dict[str, Tuple[float, float]]
+    data_length: int
 
 
 @app.post("/select/{client_id}")
