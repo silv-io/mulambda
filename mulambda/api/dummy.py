@@ -15,7 +15,7 @@ sem = asyncio.Semaphore()
 
 
 class ModelInput(BaseModel):
-    type: str
+    feature: int
     inputs: List
 
 
@@ -34,21 +34,18 @@ def calculate_delay(model_input: ModelInput, concurrency: int) -> float:
 
 
 def calculate_confidence(model_input: ModelInput) -> float:
-    if model_input.type in settings.dummy.confidence.good:
-        base_confidence = 1.0
-    elif model_input.type in settings.dummy.confidence.mid:
-        base_confidence = 0.5
-    elif model_input.type in settings.dummy.confidence.bad:
-        base_confidence = 0.1
-    else:
-        base_confidence = 0.0
+    confidences = settings.dummy.features.max_confidences
+    try:
+        base_confidence = confidences[model_input.feature]
+    except IndexError:
+        return 0.0
 
-    size_impact = float(settings.dummy.confidence.size_impact)
-    size = len(model_input.inputs)
-    if size == 0:
+    set_size_impact = min(float(settings.dummy.features.set_size_impact), 1.0)
+    set_size = len(confidences)
+    if set_size == 0:
         return 0.0
     else:
-        return max(base_confidence - (1 - 1 / size) * (1 - size_impact), 0.0)
+        return base_confidence / set_size**set_size_impact
 
 
 async def simulate_load(model_input: ModelInput) -> float:

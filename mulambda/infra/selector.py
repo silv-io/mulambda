@@ -21,6 +21,15 @@ def get_score(weights: Dict[str, float], latency, accuracy) -> float:
     return -weights["latency"] * latency + weights["accuracy"] * accuracy
 
 
+def normalize_latency(latency: int) -> float:
+    buckets = settings.selector.latency_buckets
+    for i, bucket in enumerate(buckets):
+        if latency <= bucket:
+            return round(1 - (i / len(buckets)), 2)
+    else:
+        return 0.0
+
+
 class ModelSelector:
     models: List[Tuple[ModelTraits, Endpoint]]
 
@@ -42,13 +51,12 @@ class ModelSelector:
             (estimate_performance(model[0], data_length, client_id), model[1])
             for model in filtered
         ]
-        max_latency = max(estimate, key=lambda x: x[0][1])[0][1]
         max_accuracy = max(estimate, key=lambda x: x[0][2])[0][2]
         normalized = [
             (
                 model[0][0],
-                model[0][1] / (max_latency * 1.2),
-                model[0][2] / (max_accuracy * 1.2),
+                normalize_latency(model[0][1]),
+                model[0][2] / max_accuracy,
                 model[1],
             )
             for model in estimate

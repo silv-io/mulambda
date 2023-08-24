@@ -89,6 +89,12 @@ export EXP_NAME EXP_ID
 kube-run-experiment-job:
 	cat ./k8s/experiment.yaml | envsubst | kubectl apply -f -
 
+MODEL_ID ?= 1
+export MODEL_ID
+test_model:
+	source <(./k8s/set_model_env.sh ./k8s/dummy-models.csv)
+	cat ./k8s/test | envsubst
+
 kube-deploy-all: kube-deploy-infra kube-deploy-tf-model kube-deploy-client
 
 kube-clear-completed-jobs:

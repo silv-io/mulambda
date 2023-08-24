@@ -1,5 +1,6 @@
 [selector]
 type = "round-robin"
+latency_buckets = [30, 60, 90, 150, 240, 390, 630, 1020, 1650]
 
 [network]
 redis = "dragonfly"
@@ -20,15 +21,13 @@ port = 8500
 
 [dummy]
 [dummy.delay]
-base = 1000
-size_impact = 0.1
-concurrency_impact = 0.1
-max_jitter = 300
-[dummy.confidence]
-good = ["A"]
-mid = ["B"]
-bad = ["C"]
-size_impact = 0.1
+base = 20
+size_impact = 0.2
+concurrency_impact = 0.5
+max_jitter = 5
+[dummy.features]
+max_confidences = [0.9, 0.7, 0.5]
+set_size_impact = 0.3
 
 
 [client]
