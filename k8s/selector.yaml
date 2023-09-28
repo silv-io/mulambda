@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: selector
+  name: $SELECTOR_TYPE-selector
   namespace: mulambda
 spec:
   selector:
     matchLabels:
-      app: selector
+      app: $SELECTOR_TYPE-selector
   replicas: 1
   template:
     metadata:
       labels:
-        app: selector
+        app: $SELECTOR_TYPE-selector
     spec:
       containers:
       - name: selector
@@ -20,6 +20,9 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        env:
+          - name: MULAMBDA_SELECTOR__TYPE
+            value: $SELECTOR_TYPE
       nodeSelector:
         ether.edgerun.io/zone: zone-c
         node-role.kubernetes.io/controller: "true"
@@ -27,11 +30,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: selector
+  name: $SELECTOR_TYPE-selector
   namespace: mulambda
 spec:
   selector:
-    app: selector
+    app: $SELECTOR_TYPE-selector
   ports:
   - protocol: TCP
     port: 80

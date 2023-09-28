@@ -22,7 +22,6 @@ httpx==0.24.1
 identify==2.5.26
 idna==3.4
 iniconfig==2.0.0
--e git+ssh://git@github.com/silv-io/mulambda.git@092e434d4c150cc9f8cda028a4176480d28e55fe#egg=mulambda
 multidict==6.0.4
 mypy-extensions==1.0.0
 nodeenv==1.8.0

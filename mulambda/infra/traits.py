@@ -79,7 +79,7 @@ class ModelTraits(UserDict):
             output_type=data["output"],
             mdd=float(data.get("mdd", 0)),
             latencies={
-                k.removeprefix("latency:"): v
+                k.removeprefix("latency:"): int(v)
                 for k, v in data.items()
                 if k.startswith("latency:")
             },

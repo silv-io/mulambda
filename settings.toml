@@ -1,6 +1,6 @@
 [selector]
 type = "round-robin"
-latency_buckets = [30, 60, 90, 150, 240, 390, 630, 1020, 1650]
+latency_buckets = [10, 30, 60, 90, 150, 240, 390, 630, 1020]
 
 [network]
 redis = "dragonfly"
@@ -36,3 +36,8 @@ id = "client"
 [experiment]
 name = "test"
 author = "silv-io"
+target = "mulambda-client"
+usecase = "scp"
+concurrency = 4
+amount = 100
+size = 10

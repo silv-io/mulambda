@@ -10,7 +10,7 @@ from mulambda.infra.traits import (
     RequiredTraits,
     estimate_performance,
 )
-from mulambda.util import MULAMBDA_MODELS, get_metadata_server
+from mulambda.util import MULAMBDA_MODELS, get_metadata_server, send_galileo_event
 
 LOG = logging.getLogger(__name__)
 
@@ -47,11 +47,11 @@ class ModelSelector:
         client_id: str,
     ) -> Tuple[ModelTraits, Endpoint]:
         filtered = [model for model in self.models if model[0].hard_filter(required)]
-        estimate = [
+        estimated = [
             (estimate_performance(model[0], data_length, client_id), model[1])
             for model in filtered
         ]
-        max_accuracy = max(estimate, key=lambda x: x[0][2])[0][2]
+        max_accuracy = max(estimated, key=lambda x: x[0][2])[0][2]
         normalized = [
             (
                 model[0][0],
@@ -59,9 +59,18 @@ class ModelSelector:
                 model[0][2] / max_accuracy,
                 model[1],
             )
-            for model in estimate
+            for model in estimated
         ]
         selected = max(normalized, key=lambda x: get_score(weights, x[1], x[2]))
+        send_galileo_event(
+            {
+                "type": "selection",
+                "filtered": filtered,
+                "estimated": estimated,
+                "normalized": normalized,
+                "selected": selected,
+            }
+        )
         return selected[0], selected[3]
 
     def __call__(
@@ -88,6 +97,7 @@ class ModelSelector:
 
     async def ingest_models(self, r: Redis):
         model_ids = await r.smembers(MULAMBDA_MODELS)
+        self.models = []
         for model_id in model_ids:
             traits = ModelTraits.from_redis(
                 await r.hgetall(f"{MULAMBDA_MODELS}:{model_id}")
@@ -137,11 +147,17 @@ class PlainNetLatencySelector(ModelSelector):
         client_id: str,
     ) -> Tuple[ModelTraits, Endpoint]:
         filtered = [model for model in self.models if model[0].hard_filter(required)]
+        for model in filtered:
+            print(f"Selecting from {model[0]['latencies']}")
         return min(filtered, key=lambda x: x[0]["latencies"][client_id])
 
 
 if settings.selector.type == "round-robin":
     selector = RoundRobinSelector()
+elif settings.selector.type == "random":
+    selector = RandomSelector()
+elif settings.selector.type == "plain-net-latency":
+    selector = PlainNetLatencySelector()
 else:
     selector = ModelSelector()
 

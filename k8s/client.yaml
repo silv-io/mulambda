@@ -23,9 +23,11 @@ spec:
         env:
           - name: MULAMBDA_CLIENT__ID
             value: "$CLIENT_ID"
+          - name: MULAMBDA_NETWORK__SELECTOR
+            value: "$TARGET_SELECTOR"
       nodeSelector:
         ether.edgerun.io/zone: zone-c
-        node-role.kubernetes.io/worker: "true"
+        node-role.kubernetes.io/controller: "true"
 ---
 apiVersion: v1
 kind: Service

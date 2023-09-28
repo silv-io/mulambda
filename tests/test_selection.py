@@ -1,103 +1,109 @@
+from mulambda.infra.selector import ModelSelector
 from mulambda.infra.traits import (
-    DesiredTraitWeights,
     ModelTraits,
-    NormalizationRanges,
-    RequiredTraits,
 )
 
 
 class TestSelection:
-    def test_required(self):
-        models = [
-            ModelTraits(
-                "id_1",
-                "translation",
-                "text",
-                "text",
-                100,
-                0.9,
-            ),
-            ModelTraits(
-                "id_2",
-                "completion",
-                "text",
-                "text",
-                100,
-                0.9,
-            ),
-            ModelTraits(
-                "id_3",
-                "classification",
-                "image",
-                "text",
-                100,
-                0.9,
-            ),
-            ModelTraits(
-                "id_4",
-                "translation",
-                "text",
-                "text",
-                100,
-                0.9,
-            ),
-        ]
-
-        req = RequiredTraits("translation", "text", "text")
-        filtered = [model for model in models if model.hard_filter(req)]
-        assert len(filtered) == 2
-        assert filtered[0]["id"] == "id_1"
-
-        req = RequiredTraits("classification", "image", "text")
-        filtered = [model for model in models if model.hard_filter(req)]
-        assert len(filtered) == 1
-        assert filtered[0]["id"] == "id_3"
-
     def test_desired(self):
         models = [
-            ModelTraits(
+            (
+                ModelTraits(
+                    "id_1",
+                    "test",
+                    "test",
+                    "test",
+                    10,
+                    {"test_client": 40},
+                    0.3,
+                    "test",
+                    80,
+                ),
                 "id_1",
-                "translation",
-                "text",
-                "text",
-                500,
-                0.99,
             ),
-            ModelTraits(
+            (
+                ModelTraits(
+                    "id_2",
+                    "test",
+                    "test",
+                    "test",
+                    100,
+                    {"test_client": 40},
+                    0.8,
+                    "test",
+                    80,
+                ),
                 "id_2",
-                "translation",
-                "text",
-                "text",
-                300,
-                0.8,
             ),
-            ModelTraits(
+            (
+                ModelTraits(
+                    "id_3",
+                    "test",
+                    "test",
+                    "test",
+                    1,
+                    {"test_client": 401},
+                    0.8,
+                    "test",
+                    80,
+                ),
                 "id_3",
-                "translation",
-                "text",
-                "text",
-                20,
-                0.95,
             ),
-            ModelTraits(
+            (
+                ModelTraits(
+                    "id_4",
+                    "test",
+                    "test",
+                    "test",
+                    15,
+                    {"test_client": 40},
+                    0.7,
+                    "test",
+                    80,
+                ),
                 "id_4",
-                "translation",
-                "text",
-                "text",
-                10,
-                0.60,
             ),
         ]
-        ranges = NormalizationRanges(latency=(0, 500))
-        weights = DesiredTraitWeights(latency=-1, accuracy=1)
+        selector = ModelSelector()
+        for model in models:
+            selector.append(model)
 
-        minimum = min(models, key=lambda model: model.sort_key(weights, ranges))
-        assert minimum["id"] == "id_3"
+        selected = selector(
+            "test_client",
+            {
+                "required": {"type": "test", "input": "test", "output": "test"},
+                "desired": {"accuracy": 1, "latency": 0},
+                "data_length": 10,
+            },
+        )
+        assert selected["model"]["id"] == "id_2"
 
-        weights = DesiredTraitWeights(latency=-1, accuracy=0)
-        minimum = min(models, key=lambda model: model.sort_key(weights, ranges))
-        assert minimum["id"] == "id_4"
+        selected = selector(
+            "test_client",
+            {
+                "required": {"type": "test", "input": "test", "output": "test"},
+                "desired": {"accuracy": 0, "latency": -1},
+                "data_length": 10,
+            },
+        )
+        assert selected["model"]["id"] == "id_1"
 
-        weights = DesiredTraitWeights(latency=0, accuracy=1)
-        minimum = min(models, key=lambda model: model.sort_key(weights, ranges))
-        assert minimum["id"] == "id_1"
+        selected = selector(
+            "test_client",
+            {
+                "required": {"type": "test", "input": "test", "output": "test"},
+                "desired": {"accuracy": 0, "latency": -1},
+                "data_length": 100,
+            },
+        )
+        assert selected["model"]["id"] == "id_3"
+
+        selected = selector(
+            "test_client",
+            {
+                "required": {"type": "test", "input": "test", "output": "test"},
+                "desired": {"accuracy": 0.5, "latency": -0.5},
+                "data_length": 10,
+            },
+        )
+        assert selected["model"]["id"] == "id_4"

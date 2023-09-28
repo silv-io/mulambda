@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import random
 from typing import List
 
@@ -12,6 +13,9 @@ app = FastAPI()
 
 concurrent_requests = 0
 sem = asyncio.Semaphore()
+
+recent_confidences = collections.deque(maxlen=10)
+avg_sem = asyncio.Semaphore()
 
 
 class ModelInput(BaseModel):
@@ -48,6 +52,14 @@ def calculate_confidence(model_input: ModelInput) -> float:
         return base_confidence / set_size**set_size_impact
 
 
+async def update_running_avg(confidence: float):
+    global recent_confidences
+    async with avg_sem:
+        recent_confidences.append(confidence)
+        average = sum(recent_confidences) / len(recent_confidences)
+    return average
+
+
 async def simulate_load(model_input: ModelInput) -> float:
     global concurrent_requests
     try:
@@ -56,7 +68,6 @@ async def simulate_load(model_input: ModelInput) -> float:
             concurrent_requests += 1
         print(f"Delaying for {delay} seconds")
         await asyncio.sleep(delay)
-        await asyncio.sleep(5)
         confidence = calculate_confidence(model_input)
         print(f"Got confidence {confidence}")
         return calculate_confidence(model_input)
@@ -68,7 +79,8 @@ async def simulate_load(model_input: ModelInput) -> float:
 @app.post("/")
 async def read_root(model_input: ModelInput):
     confidence = await simulate_load(model_input)
-    return {"received": model_input.inputs, "confidence": confidence}
+    avg = await update_running_avg(confidence)
+    return {"received": model_input.inputs, "confidence": confidence, "avg": avg}
 
 
 if __name__ == "__main__":

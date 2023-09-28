@@ -17,6 +17,8 @@ MULAMBDA_LATENCIES = MULAMBDA_PREFIX + "latencies"
 GALILEO_CHANNEL = "galileo/events"
 GALILEO_METRIC = "mulambda"
 
+EXPERIMENT_CHANNEL = "exp/events"
+
 
 def get_metadata_server() -> Redis:
     return Redis(
@@ -45,6 +47,15 @@ async def send_galileo_event(
     await galileo.publish(
         GALILEO_CHANNEL, f"{time.time()} {metric} {json.dumps(event)}"
     )
+    await galileo.close()
+
+
+async def send_experiment_event(
+    event: str,
+):
+    print(f"Sending experiment event to Galileo: {event}")
+    galileo = get_galileo_server()
+    await galileo.publish(EXPERIMENT_CHANNEL, event)
     await galileo.close()
 
 

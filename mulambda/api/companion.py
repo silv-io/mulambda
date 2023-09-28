@@ -45,19 +45,21 @@ async def async_run():
         for client_id in clients:
             curr_latency = get_latency(client_id)
             print(f"Client {client_id} latency for model {model.id}: {curr_latency}")
-            metadata.hset(
-                f"{MULAMBDA_MODELS}:{model.id}",
-                f"latency:{client_id}",
-                curr_latency,
-            ),
-            await send_galileo_event(
-                {
-                    "type": "companion",
-                    "client_id": client_id,
-                    "model": model.id,
-                    "latency": curr_latency,
-                },
-                "mulambda_companion",
+            await asyncio.gather(
+                metadata.hset(
+                    f"{MULAMBDA_MODELS}:{model.id}",
+                    f"latency:{client_id}",
+                    str(curr_latency),
+                ),
+                send_galileo_event(
+                    {
+                        "type": "companion",
+                        "client_id": client_id,
+                        "model": model.id,
+                        "latency": curr_latency,
+                    },
+                    "mulambda_companion",
+                ),
             )
             await asyncio.sleep(5)
 

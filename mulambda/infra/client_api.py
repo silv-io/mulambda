@@ -6,7 +6,7 @@ from mulambda.util import get_metadata_server
 
 
 async def get_model(
-    required: Dict, desired: Dict, ranges: Dict, selector_url: str
+    required: Dict, desired: Dict, data_length: int, selector_url: str
 ) -> (str, Dict):
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -14,7 +14,7 @@ async def get_model(
             json={
                 "required": required,
                 "desired": desired,
-                "ranges": ranges,
+                "data_length": data_length,
             },
         )
     print(f"Selected model: {response.json()}")

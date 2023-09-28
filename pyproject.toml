@@ -17,7 +17,6 @@ dependencies = [
     "fastapi>=0.100",
     "uvicorn[standard]>=0.23",
     "redis[hiredis]>=4.6",
-#    "edgerun-galileo-experiments",
 ]
 
 [project.optional-dependencies]

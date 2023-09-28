@@ -53,15 +53,24 @@ k3d-create:
 kube-deploy-infra:
 	kubectl apply -f k8s/namespace.yaml
 	kubectl apply -f k8s/dragonfly.yaml
-	kubectl apply -f k8s/minio.yaml
-	kubectl apply -f k8s/selector.yaml
+	#kubectl apply -f k8s/minio.yaml
+
+
+SELECTOR_TYPE ?= round-robin
+#SELECTOR_TYPE ?= random
+#SELECTOR_TYPE ?= plain-net-latency
+#SELECTOR_TYPE ?= mulambda
+export SELECTOR_TYPE
+kube-deploy-selector:
+	cat ./k8s/selector.yaml | envsubst | kubectl apply -f -
 
 kube-upload-models:
 	mcli ls localminio/models || mcli mb localminio/models
 	mcli cp -r ./assets/models/* localminio/models
 
-CLIENT_ID ?= experiment-client
-export CLIENT_ID
+CLIENT_ID ?= $(SELECTOR_TYPE)-client
+TARGET_SELECTOR ?= $(SELECTOR_TYPE)-selector
+export CLIENT_ID TARGET_SELECTOR
 kube-deploy-client:
 	cat ./k8s/client.yaml | envsubst | kubectl apply -f -
 
