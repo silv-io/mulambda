@@ -41,3 +41,4 @@ usecase = "scp"
 concurrency = 4
 amount = 100
 size = 10
+client_scale = 1
