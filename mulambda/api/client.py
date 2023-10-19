@@ -77,6 +77,7 @@ async def post_traced(model: (str, Dict), data: Dict):
         f"{MULAMBDA_MODELS}:{traits['id']}", {"mdd": mdd, "accuracy": result["avg"]}
     )
     trace["model_traits"]["accuracy"] = result["confidence"]
+    trace["targeted_node"] = result["node"]
     await send_galileo_event(trace)
     return response.json()
 

@@ -18,6 +18,8 @@ output = "floatvector"
 accuracy = 1.0
 path = "/v1/models/test_model:predict"
 port = 8500
+[companion.node]
+id = 1
 
 [dummy]
 [dummy.delay]

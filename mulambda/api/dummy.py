@@ -11,6 +11,7 @@ from mulambda.config import settings
 
 app = FastAPI()
 
+running_on = settings.dummy.node.id
 concurrent_requests = 0
 sem = asyncio.Semaphore()
 
@@ -80,7 +81,12 @@ async def simulate_load(model_input: ModelInput) -> float:
 async def read_root(model_input: ModelInput):
     confidence = await simulate_load(model_input)
     avg = await update_running_avg(confidence)
-    return {"received": model_input.inputs, "confidence": confidence, "avg": avg}
+    return {
+        "received": model_input.inputs,
+        "confidence": confidence,
+        "avg": avg,
+        "node": running_on,
+    }
 
 
 if __name__ == "__main__":
