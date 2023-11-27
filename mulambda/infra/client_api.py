@@ -16,6 +16,7 @@ async def get_model(
                 "desired": desired,
                 "data_length": data_length,
             },
+            timeout=None,
         )
     print(f"Selected model: {response.json()}")
     traits = response.json()["model"]
